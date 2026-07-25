@@ -23,7 +23,7 @@ export const PLANS = {
 
 export const DOWNLOAD_LIMITS = {
   FREE: 1,
-  PREMIUM: 10,
+  PREMIUM: 25,
 };
 
 

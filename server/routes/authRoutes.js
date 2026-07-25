@@ -1,41 +1,19 @@
 import express from "express";
-
 import {
   registerUser,
   loginUser,
+  getProfile,
 } from "../controllers/authController.js";
 
-import authMiddleware from "../middleware/authMiddleware.js";
+import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-
-// =======================
-// Register User
-// POST /api/auth/register
-// =======================
+// Public Routes
 router.post("/register", registerUser);
-
-
-// =======================
-// Login User
-// POST /api/auth/login
-// =======================
 router.post("/login", loginUser);
 
-
-// =======================
-// Get User Profile (Protected)
-// GET /api/auth/profile
-// =======================
-router.get("/profile", authMiddleware, (req, res) => {
-  console.log("🔥 AUTH PROFILE ROUTE HIT");
-
-  res.status(200).json({
-    success: true,
-    user: req.user,
-  });
-});
-
+// Protected Route
+router.get("/profile", protect, getProfile);
 
 export default router;

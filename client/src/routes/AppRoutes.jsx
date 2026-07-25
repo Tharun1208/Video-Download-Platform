@@ -5,7 +5,7 @@ import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import EditProfile from "../pages/EditProfile.jsx";
 import DashboardLayout from "../components/layout/DashboardLayout.jsx";
-
+import ProtectedRoute from "../routes/ProtectedRoute.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import Videos from "../pages/Videos.jsx";
 import VideoDetails from "../pages/VideoDetails.jsx";

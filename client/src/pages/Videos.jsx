@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Filter } from "lucide-react";
 
 import Button from "../components/common/Button";
 import VideoGrid from "../components/videos/VideoGrid";
+import { getAllVideos } from "../api/videoApi";
 
 const categories = [
   "All",
@@ -16,6 +17,27 @@ const categories = [
 
 function Videos() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const fetchVideos = async () => {
+    try {
+      const response = await getAllVideos();
+
+      if (response.data.success) {
+        setVideos(response.data.videos);
+      }
+    } catch (error) {
+      console.error("Failed to fetch videos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
@@ -48,6 +70,8 @@ function Videos() {
           <input
             type="text"
             placeholder="Search videos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-transparent outline-none text-white placeholder-gray-500"
           />
 
@@ -87,7 +111,12 @@ function Videos() {
 
       {/* Video Grid */}
 
-      <VideoGrid />
+      <VideoGrid
+        videos={videos}
+        loading={loading}
+        activeCategory={activeCategory}
+        search={search}
+      />
 
     </div>
   );

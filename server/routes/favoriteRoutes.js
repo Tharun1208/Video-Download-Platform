@@ -1,19 +1,22 @@
 import express from "express";
 
+import {
+  addToFavorites,
+  getFavorites,
+  removeFromFavorites,
+} from "../controllers/favoriteController.js";
+
+import protect from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Favorite Route Working",
-  });
-});
+// Add to Favorites
+router.post("/:videoId", protect, addToFavorites);
 
-router.post("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Add Favorite Route Working",
-  });
-});
+// Get My Favorites
+router.get("/", protect, getFavorites);
+
+// Remove from Favorites
+router.delete("/:videoId", protect, removeFromFavorites);
 
 export default router;

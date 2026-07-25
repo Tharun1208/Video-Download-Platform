@@ -9,6 +9,10 @@ import {
 import Button from "../common/Button";
 
 function DownloadCard({ video = {} }) {
+  const downloadedDate = video.createdAt
+    ? new Date(video.createdAt).toLocaleDateString()
+    : "N/A";
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/20">
 
@@ -16,11 +20,19 @@ function DownloadCard({ video = {} }) {
 
         {/* Thumbnail */}
 
-        <div className="w-full md:w-52 h-36 bg-gray-800 rounded-xl flex items-center justify-center transition-all duration-300 hover:bg-gray-700">
+        <div className="w-full md:w-52 h-36 bg-gray-800 rounded-xl overflow-hidden flex items-center justify-center">
 
-          <span className="text-gray-400">
-            Thumbnail
-          </span>
+          {video.video?.thumbnail ? (
+            <img
+              src={video.video.thumbnail}
+              alt={video.video.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-gray-400">
+              Thumbnail
+            </span>
+          )}
 
         </div>
 
@@ -29,15 +41,11 @@ function DownloadCard({ video = {} }) {
         <div className="flex-1">
 
           <h2 className="text-2xl font-bold text-white">
-
-            {video.title}
-
+            {video.video?.title}
           </h2>
 
           <p className="text-gray-400 mt-2">
-
-            {video.category}
-
+            {video.video?.category}
           </p>
 
           <div className="flex items-center gap-2 mt-4 text-gray-400 text-sm">
@@ -45,7 +53,7 @@ function DownloadCard({ video = {} }) {
             <Calendar size={16} />
 
             <span>
-              Downloaded: {video.date}
+              Downloaded: {downloadedDate}
             </span>
 
           </div>
@@ -55,7 +63,7 @@ function DownloadCard({ video = {} }) {
             <Download size={16} />
 
             <span>
-              Download Count: {video.count}
+              Total Downloads: {video.video?.downloads}
             </span>
 
           </div>
@@ -80,11 +88,11 @@ function DownloadCard({ video = {} }) {
 
         </div>
 
-        {/* Plan Badge */}
+        {/* Premium Badge */}
 
         <div className="flex md:block">
 
-          {video.plan === "Premium" ? (
+          {video.video?.isPremium ? (
 
             <span className="flex items-center gap-2 bg-yellow-500 text-black px-4 py-2 rounded-full font-semibold shadow-lg">
 

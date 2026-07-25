@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Download,
   Play,
@@ -6,22 +6,65 @@ import {
   Clock,
   Eye,
 } from "lucide-react";
+import { useParams } from "react-router-dom";
 
 import Button from "../components/common/Button";
+import { getVideoById } from "../api/videoApi";
 
 function VideoDetails() {
+  const { id } = useParams();
+
+  const [video, setVideo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchVideo();
+  }, []);
+
+  const fetchVideo = async () => {
+    try {
+      const response = await getVideoById(id);
+
+      if (response.data.success) {
+        setVideo(response.data.video);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!video) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-red-500">
+        Video not found.
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
 
       {/* Video Player */}
 
-      <div className="bg-black border border-gray-800 rounded-2xl h-[450px] flex items-center justify-center transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/20">
+      <div className="bg-black border border-gray-800 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/20">
 
-        <button className="w-24 h-24 rounded-full bg-blue-600 hover:bg-blue-700 hover:scale-110 transition-all duration-300 flex items-center justify-center">
-
-          <Play size={55} fill="white" />
-
-        </button>
+        <iframe
+          width="100%"
+          height="450"
+          src={`https://www.youtube.com/embed/${video.youtubeId}`}
+          title={video.title}
+          allowFullScreen
+        />
 
       </div>
 
@@ -34,47 +77,52 @@ function VideoDetails() {
           <div className="flex-1">
 
             <h1 className="text-4xl font-bold">
-              React Full Course
+              {video.title}
             </h1>
 
             <p className="text-blue-400 mt-2">
-              Frontend Development
+              {video.category}
             </p>
 
             <div className="flex flex-wrap gap-6 mt-6 text-gray-400">
 
               <div className="flex items-center gap-2">
                 <Clock size={18} />
-                5 Hours
+                {video.duration}
               </div>
 
               <div className="flex items-center gap-2">
                 <Eye size={18} />
-                52K Views
+                {video.views} Views
               </div>
 
             </div>
 
             <p className="mt-6 text-gray-300 leading-8">
-              Learn React from beginner to advanced level by building
-              real-world projects. Understand components, hooks,
-              routing, API integration, state management and deployment
-              with modern React best practices.
+              {video.description}
+            </p>
+
+            <p className="mt-4 text-gray-500">
+              Uploaded by: {video.uploader?.name}
             </p>
 
           </div>
 
-          <div>
+          {video.isPremium && (
 
-            <span className="flex items-center gap-2 bg-yellow-500 text-black px-5 py-2 rounded-full font-semibold shadow-lg">
+            <div>
 
-              <Crown size={18} />
+              <span className="flex items-center gap-2 bg-yellow-500 text-black px-5 py-2 rounded-full font-semibold shadow-lg">
 
-              Premium
+                <Crown size={18} />
 
-            </span>
+                Premium
 
-          </div>
+              </span>
+
+            </div>
+
+          )}
 
         </div>
 
@@ -119,46 +167,6 @@ function VideoDetails() {
           <li>✓ Premium users get HD quality downloads.</li>
 
         </ul>
-
-      </div>
-
-      {/* Related Videos */}
-
-      <div className="mt-10">
-
-        <h2 className="text-3xl font-bold mb-6">
-          Related Videos
-        </h2>
-
-        <div className="grid md:grid-cols-3 gap-6">
-
-          {[
-            "Node JS Masterclass",
-            "MongoDB Complete Guide",
-            "JavaScript Advanced",
-          ].map((video) => (
-            <div
-              key={video}
-              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:border-blue-500 hover:bg-gray-800 hover:shadow-xl hover:shadow-blue-500/20"
-            >
-              <div className="h-36 bg-gray-800 rounded-xl flex items-center justify-center mb-5">
-
-                <Play className="text-blue-500" size={36} />
-
-              </div>
-
-              <h3 className="text-xl font-semibold">
-                {video}
-              </h3>
-
-              <p className="text-gray-400 mt-2">
-                Click to explore this course.
-              </p>
-
-            </div>
-          ))}
-
-        </div>
 
       </div>
 

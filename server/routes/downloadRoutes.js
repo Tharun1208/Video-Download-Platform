@@ -1,19 +1,18 @@
 import express from "express";
 
+import {
+  downloadVideo,
+  getDownloadHistory,
+} from "../controllers/downloadController.js";
+
+import protect from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-router.get("/history", (req, res) => {
-  res.json({
-    success: true,
-    message: "Download History Route Working",
-  });
-});
+// Download a video
+router.post("/:videoId", protect, downloadVideo);
 
-router.post("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Download Route Working",
-  });
-});
+// Get Download History
+router.get("/history", protect, getDownloadHistory);
 
 export default router;

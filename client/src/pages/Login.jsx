@@ -8,11 +8,14 @@ import {
 
 import Button from "../components/common/Button";
 import { APP_NAME } from "../utils/constants";
+import { loginUser } from "../api/authApi";
 
 function Login() {
     const navigate = useNavigate();
 
     const [showPassword, setShowPassword] = useState(false);
+
+    const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         email: "",
@@ -26,16 +29,39 @@ function Login() {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        console.log(formData);
+        try {
+            setLoading(true);
 
-        // Backend authentication will be added later
+            const response = await loginUser(formData);
 
-        localStorage.setItem("token", "demo-token");
+            if (response.data.success) {
 
-        navigate("/dashboard");
+                // Save JWT Token
+                localStorage.setItem("token", response.data.token);
+
+                // Save User Details
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(response.data.user)
+                );
+
+                alert("✅ Login Successful!");
+
+                navigate("/dashboard");
+            }
+
+        } catch (error) {
+
+            alert(
+                error.response?.data?.message || "❌ Login Failed"
+            );
+
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -67,9 +93,7 @@ function Login() {
                     <div>
 
                         <label className="text-sm text-gray-300">
-
                             Email Address
-
                         </label>
 
                         <input
@@ -87,9 +111,7 @@ function Login() {
                     <div>
 
                         <label className="text-sm text-gray-300">
-
                             Password
-
                         </label>
 
                         <div className="relative">
@@ -135,8 +157,9 @@ function Login() {
                         type="submit"
                         icon={<LogIn size={20} />}
                         className="w-full"
+                        disabled={loading}
                     >
-                        Login
+                        {loading ? "Logging in..." : "Login"}
                     </Button>
 
                 </form>

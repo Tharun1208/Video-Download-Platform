@@ -2,9 +2,9 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
-// @desc    Register new user
-// @route   POST /api/auth/register
-// @access  Public
+// ============================
+// Register User
+// ============================
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -12,15 +12,17 @@ export const registerUser = async (req, res) => {
     // Check required fields
     if (!name || !email || !password) {
       return res.status(400).json({
-        message: "Please provide all required fields",
+        success: false,
+        message: "All fields are required",
       });
     }
 
-    // Check if user already exists
+    // Check existing user
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
+        success: false,
         message: "User already exists",
       });
     }
@@ -36,32 +38,30 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
     res.status(201).json({
+      success: true,
       message: "Registration successful",
+      token: generateToken(user._id),
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
+        avatar: user.avatar,
         plan: user.plan,
         role: user.role,
       },
-      token,
     });
-
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
 };
 
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
+// ============================
+// Login User
+// ============================
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -71,39 +71,56 @@ export const loginUser = async (req, res) => {
 
     if (!user) {
       return res.status(401).json({
+        success: false,
         message: "Invalid email or password",
       });
     }
 
     // Compare password
-    const isPasswordMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordMatch) {
+    if (!isMatch) {
       return res.status(401).json({
+        success: false,
         message: "Invalid email or password",
       });
     }
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
     res.status(200).json({
+      success: true,
       message: "Login successful",
+      token: generateToken(user._id),
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
+        avatar: user.avatar,
         plan: user.plan,
         role: user.role,
       },
-      token,
     });
-
   } catch (error) {
     res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ============================
+// Get Profile
+// ============================
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
       message: error.message,
     });
   }

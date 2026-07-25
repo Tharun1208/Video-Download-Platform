@@ -12,6 +12,7 @@ import downloadRoutes from "./routes/downloadRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 // Load Environment Variables
 dotenv.config();
@@ -41,8 +42,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/downloads", downloadRoutes);
 app.use("/api/favorites", favoriteRoutes);
-app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // 404 Handler
 app.use((req, res) => {

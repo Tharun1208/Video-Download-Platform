@@ -1,31 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DownloadCard from "../components/downloads/DownloadCard";
-
-const downloads = [
-  {
-    title: "React Full Course",
-    category: "Frontend Development",
-    date: "18 July 2026",
-    count: 1,
-    plan: "Free",
-  },
-  {
-    title: "Node JS Masterclass",
-    category: "Backend Development",
-    date: "17 July 2026",
-    count: 3,
-    plan: "Premium",
-  },
-  {
-    title: "MongoDB Complete Guide",
-    category: "Database",
-    date: "16 July 2026",
-    count: 2,
-    plan: "Premium",
-  },
-];
+import { getDownloadHistory } from "../api/downloadApi";
 
 function Downloads() {
+  const [downloads, setDownloads] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDownloads();
+  }, []);
+
+  const fetchDownloads = async () => {
+    try {
+      const response = await getDownloadHistory();
+
+      if (response.data.success) {
+        setDownloads(response.data.downloads);
+      }
+    } catch (error) {
+      console.error("Failed to fetch downloads", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
 
@@ -57,12 +63,18 @@ function Downloads() {
 
       <div className="space-y-6">
 
-        {downloads.map((video, index) => (
-          <DownloadCard
-            key={index}
-            video={video}
-          />
-        ))}
+        {downloads.length > 0 ? (
+          downloads.map((download) => (
+            <DownloadCard
+              key={download._id}
+              video={download}
+            />
+          ))
+        ) : (
+          <div className="text-center text-gray-400 py-10">
+            No downloads found.
+          </div>
+        )}
 
       </div>
 

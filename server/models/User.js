@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    lastDownloadDate: {
+      type: Date,
+      default: null,
+    },
 
     plan: {
       type: String,
@@ -48,6 +52,13 @@ const userSchema = new mongoose.Schema(
       enum: ["User", "Admin"],
       default: "User",
     },
+
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
   },
   {
     timestamps: true,

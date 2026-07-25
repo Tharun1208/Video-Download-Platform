@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   AtSign,
   Mail,
-  MapPin,
   Crown,
   Download,
   Calendar,
@@ -11,8 +10,43 @@ import {
 import { Link } from "react-router-dom";
 
 import Button from "../components/common/Button";
+import { getProfile } from "../api/userApi";
 
 function Profile() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await getProfile();
+
+      if (response.data.success) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to load profile"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex justify-center items-center text-white">
+        Loading Profile...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
 
@@ -22,50 +56,92 @@ function Profile() {
 
       {/* Profile Card */}
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/20">
+      <div
+        className="
+        bg-gray-900
+        border
+        border-gray-800
+        rounded-2xl
+        p-8
+        transition-all
+        duration-300
+        hover:border-blue-500
+        hover:shadow-2xl
+        hover:shadow-blue-500/20
+        "
+      >
 
         <div className="flex flex-col md:flex-row items-center gap-8">
 
           {/* Avatar */}
 
-          <div className="w-32 h-32 rounded-full bg-blue-600 flex items-center justify-center text-5xl font-bold transition-all duration-300 hover:scale-105">
-            T
-          </div>
+          {
+            user?.avatar ? (
 
-          {/* Profile Info */}
+              <img
+                src={user.avatar}
+                alt="Profile"
+                className="
+                w-32
+                h-32
+                rounded-full
+                object-cover
+                border-4
+                border-blue-500
+                "
+              />
+
+            ) : (
+
+              <div
+                className="
+                w-32
+                h-32
+                rounded-full
+                bg-blue-600
+                flex
+                items-center
+                justify-center
+                text-5xl
+                font-bold
+                "
+              >
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+
+            )
+          }
+
+          {/* User Details */}
 
           <div className="flex-1">
 
             <h2 className="text-3xl font-bold">
-              Tharun
+              {user?.name}
             </h2>
 
             <p className="flex items-center gap-2 text-gray-400 mt-4">
               <AtSign size={18} />
-              tharunhs
+              {
+                user?.username ||
+                user?.name?.toLowerCase().replace(/\s+/g, "")
+              }
             </p>
 
             <p className="flex items-center gap-2 text-gray-400 mt-3">
               <Mail size={18} />
-              tharun@gmail.com
-            </p>
-
-            <p className="flex items-center gap-2 text-gray-400 mt-3">
-              <MapPin size={18} />
-              Bengaluru, India
-            </p>
-
-            <p className="text-gray-400 mt-5 leading-7 max-w-2xl">
-              Passionate Full Stack Developer building modern web applications.
+              {user?.email}
             </p>
 
             <Link to="/edit-profile">
+
               <Button
                 icon={<Edit size={18} />}
                 className="mt-6"
               >
                 Edit Profile
               </Button>
+
             </Link>
 
           </div>
@@ -74,11 +150,28 @@ function Profile() {
 
       </div>
 
-      {/* Stats */}
+
+      {/* Stats Cards */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/20">
+        {/* Total Downloads */}
+
+        <div
+          className="
+          bg-gray-900
+          border
+          border-gray-800
+          rounded-2xl
+          p-6
+          transition-all
+          duration-300
+          hover:border-blue-500
+          hover:shadow-2xl
+          hover:shadow-blue-500/20
+          hover:-translate-y-1
+          "
+        >
 
           <div className="flex items-center gap-3">
 
@@ -91,12 +184,29 @@ function Profile() {
           </div>
 
           <p className="text-4xl font-bold mt-4">
-            25
+            {user?.totalDownloads || 0}
           </p>
 
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/20">
+
+        {/* Current Plan */}
+
+        <div
+          className="
+          bg-gray-900
+          border
+          border-gray-800
+          rounded-2xl
+          p-6
+          transition-all
+          duration-300
+          hover:border-yellow-500
+          hover:shadow-2xl
+          hover:shadow-yellow-500/20
+          hover:-translate-y-1
+          "
+        >
 
           <div className="flex items-center gap-3">
 
@@ -109,12 +219,29 @@ function Profile() {
           </div>
 
           <p className="text-4xl font-bold mt-4">
-            Free
+            {user?.plan}
           </p>
 
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/20">
+
+        {/* Joined Date */}
+
+        <div
+          className="
+          bg-gray-900
+          border
+          border-gray-800
+          rounded-2xl
+          p-6
+          transition-all
+          duration-300
+          hover:border-green-500
+          hover:shadow-2xl
+          hover:shadow-green-500/20
+          hover:-translate-y-1
+          "
+        >
 
           <div className="flex items-center gap-3">
 
@@ -126,41 +253,87 @@ function Profile() {
 
           </div>
 
-          <p className="text-4xl font-bold mt-4">
-            2026
+          <p className="text-2xl font-bold mt-4">
+            {new Date(user?.createdAt).toLocaleDateString()}
           </p>
 
         </div>
 
       </div>
 
+
       {/* Premium Banner */}
 
-      <div className="mt-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-2xl hover:shadow-purple-500/40">
+      {
+        user?.plan === "Free" && (
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div
+            className="
+            mt-8
+            bg-gradient-to-r
+            from-blue-600
+            to-purple-600
+            rounded-2xl
+            p-8
+            transition-all
+            duration-300
+            hover:shadow-2xl
+            hover:shadow-purple-500/30
+            hover:-translate-y-1
+            "
+          >
 
-          <div>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
 
-            <h2 className="text-3xl font-bold">
-              Upgrade To Premium
-            </h2>
+              <div>
 
-            <p className="mt-2 text-blue-100">
-              Get more daily downloads, premium videos and exclusive features.
-            </p>
+                <h2 className="text-3xl font-bold">
+                  Upgrade To Premium 👑
+                </h2>
+
+                <p className="mt-2 text-blue-100">
+                  Get more daily downloads, premium videos and exclusive features.
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-3 text-sm">
+
+                  <span className="bg-white/20 px-3 py-1 rounded-full">
+                    🚀 Faster Downloads
+                  </span>
+
+                  <span className="bg-white/20 px-3 py-1 rounded-full">
+                    🎬 Premium Videos
+                  </span>
+
+                  <span className="bg-white/20 px-3 py-1 rounded-full">
+                    ⭐ Exclusive Features
+                  </span>
+
+                </div>
+
+              </div>
+
+              <Link to="/subscription">
+
+                <Button
+                  variant="light"
+                  className="
+                  transition-all
+                  duration-300
+                  hover:scale-105
+                  "
+                >
+                  View Plans
+                </Button>
+
+              </Link>
+
+            </div>
 
           </div>
 
-          <Link to="/subscription">
-            <Button variant="light">
-              View Plans
-            </Button>
-          </Link>
-
-        </div>
-
-      </div>
+        )
+      }
 
     </div>
   );

@@ -1,19 +1,14 @@
 import express from "express";
+import {
+  upgradeToPremium,
+  getSubscriptionStatus,
+} from "../controllers/subscriptionController.js";
+
+import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Subscription Route Working",
-  });
-});
-
-router.post("/upgrade", (req, res) => {
-  res.json({
-    success: true,
-    message: "Upgrade Subscription Route Working",
-  });
-});
+router.put("/upgrade", protect, upgradeToPremium);
+router.get("/status", protect, getSubscriptionStatus);
 
 export default router;

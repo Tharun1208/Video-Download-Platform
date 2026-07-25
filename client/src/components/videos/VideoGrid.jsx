@@ -1,101 +1,54 @@
 import React from "react";
-import VideoCard from "../dashboard/VideoCard.jsx";
+import VideoCard from "../dashboard/VideoCard";
 
-
-
-const videos = [
-
-    {
-        id: 1,
-        title: "React Full Course",
-        category: "Frontend",
-        duration: "5 Hours",
-        premium: false
-    },
-
-    {
-        id: 2,
-        title: "Node JS Masterclass",
-        category: "Backend",
-        duration: "3 Hours",
-        premium: true
-    },
-
-    {
-        id: 3,
-        title: "MongoDB Complete Guide",
-        category: "Database",
-        duration: "2 Hours",
-        premium: true
-    },
-
-    {
-        id: 4,
-        title: "Python Programming",
-        category: "Programming",
-        duration: "4 Hours",
-        premium: false
-    },
-
-    {
-        id: 5,
-        title: "Artificial Intelligence Basics",
-        category: "AI",
-        duration: "6 Hours",
-        premium: true
-    },
-
-    {
-        id: 6,
-        title: "Full Stack MERN Development",
-        category: "Full Stack",
-        duration: "8 Hours",
-        premium: true
-    }
-
-];
-
-
-
-
-
-function VideoGrid() {
-
-
+function VideoGrid({
+  videos,
+  loading,
+  activeCategory,
+  search,
+}) {
+  if (loading) {
     return (
+      <div className="text-center text-gray-400 py-10">
+        Loading videos...
+      </div>
+    );
+  }
 
+  const filteredVideos = videos.filter((video) => {
+    const matchesCategory =
+      activeCategory === "All" ||
+      video.category === activeCategory;
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    const matchesSearch =
+      video.title.toLowerCase().includes(search.toLowerCase()) ||
+      video.category.toLowerCase().includes(search.toLowerCase());
 
+    return matchesCategory && matchesSearch;
+  });
 
+  if (filteredVideos.length === 0) {
+    return (
+      <div className="text-center text-gray-400 py-10">
+        No videos found.
+      </div>
+    );
+  }
 
-            {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                videos.map((video) => (
+      {filteredVideos.map((video) => (
 
+        <VideoCard
+          key={video._id}
+          video={video}
+        />
 
-                    <VideoCard
+      ))}
 
-                        key={video.id}
-
-                        video={video}
-
-                    />
-
-
-                ))
-
-
-            }
-
-
-
-        </div>
-
-
-    )
-
+    </div>
+  );
 }
-
 
 export default VideoGrid;

@@ -1,29 +1,22 @@
 import express from "express";
+import {
+  addVideo,
+  getVideos,
+  getVideoById,
+  deleteVideo,
+} from "../controllers/videoController.js";
+
+import protect from "../middleware/authMiddleware.js";
+import adminOnly from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-// Get All Videos
-router.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "All Videos Route Working",
-  });
-});
+// Public Routes
+router.get("/", getVideos);
+router.get("/:id", getVideoById);
 
-// Get Video by ID
-router.get("/:id", (req, res) => {
-  res.json({
-    success: true,
-    message: `Video ${req.params.id}`,
-  });
-});
-
-// Upload Video
-router.post("/upload", (req, res) => {
-  res.json({
-    success: true,
-    message: "Upload Video Route Working",
-  });
-});
+// Admin Routes
+router.post("/", protect, adminOnly, addVideo);
+router.delete("/:id", protect, adminOnly, deleteVideo);
 
 export default router;
