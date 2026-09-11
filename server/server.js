@@ -37,25 +37,33 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map((s) => s.trim()) : []),
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((s) => s.trim()) : []),
 ];
+
+const checkOrigin = (origin, callback) => {
+  // Allow requests without an origin (e.g. mobile apps, curl, Postman, server-to-server)
+  if (!origin) {
+    return callback(null, true);
+  }
+
+  const isAllowed =
+    allowedOrigins.includes(origin) ||
+    allowedOrigins.some((allowed) => allowed && origin.startsWith(allowed)) ||
+    origin.endsWith(".vercel.app") ||
+    origin.endsWith(".netlify.app") ||
+    origin.endsWith(".onrender.com");
+
+  if (isAllowed) {
+    return callback(null, true);
+  }
+
+  return callback(new Error("Not allowed by CORS"));
+};
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests without an origin
-      // such as Postman or PowerShell
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(
-        new Error("Not allowed by CORS")
-      );
-    },
+    origin: checkOrigin,
 
     methods: [
       "GET",
@@ -258,7 +266,7 @@ const server =
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: checkOrigin,
 
     methods: [
       "GET",
