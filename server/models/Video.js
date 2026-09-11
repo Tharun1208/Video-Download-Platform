@@ -16,9 +16,13 @@ const videoSchema = new mongoose.Schema(
 
     youtubeId: {
       type: String,
-      required: [true, "YouTube ID is required"],
-      unique: true,
+      default: "",
       trim: true,
+    },
+
+    videoUrl: {
+      type: String,
+      default: "",
     },
 
     thumbnail: {
@@ -43,6 +47,7 @@ const videoSchema = new mongoose.Schema(
         "Sports",
         "Movies",
         "News",
+        "Nature",
         "Others",
       ],
       default: "Others",
@@ -58,6 +63,21 @@ const videoSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+
+    source: {
+      type: String,
+      enum: [
+        "YouTube",
+        "Pexels",
+      ],
+      default: "YouTube",
+    },
+
+    pexelsId: {
+      type: Number,
+      unique: true,
+      sparse: true,
     },
 
     views: {
@@ -82,7 +102,10 @@ const videoSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
+      enum: [
+        "Active",
+        "Inactive",
+      ],
       default: "Active",
     },
   },
@@ -91,6 +114,11 @@ const videoSchema = new mongoose.Schema(
   }
 );
 
-const Video = mongoose.model("Video", videoSchema);
+
+const Video = mongoose.model(
+  "Video",
+  videoSchema
+);
+
 
 export default Video;

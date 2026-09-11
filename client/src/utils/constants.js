@@ -2,7 +2,7 @@
 // Application
 // ===============================
 
-export const APP_NAME = "VideoVault";
+export const APP_NAME = "StreamVault";
 
 export const APP_VERSION = "1.0.0";
 

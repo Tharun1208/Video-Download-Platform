@@ -1,11 +1,33 @@
 import API from "./axios";
 
-// Download a video
-export const downloadVideo = (videoId) => {
-  return API.post(`/downloads/${videoId}`);
+// ==========================================
+// DOWNLOAD VIDEO
+// Supports MongoDB + Pexels
+// ==========================================
+
+export const downloadVideo = (videoId, data = {}) => {
+  return API.post(
+    `/downloads/${videoId}`,
+    data
+  );
 };
 
-// Get download history
+
+// ==========================================
+// GET DOWNLOAD HISTORY
+// ==========================================
+
 export const getDownloadHistory = () => {
   return API.get("/downloads/history");
+};
+
+
+// ==========================================
+// DELETE DOWNLOAD
+// ==========================================
+
+export const deleteDownload = (downloadId) => {
+  return API.delete(
+    `/downloads/${downloadId}`
+  );
 };

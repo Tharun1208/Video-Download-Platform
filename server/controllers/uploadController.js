@@ -14,7 +14,7 @@ export const uploadProfileImage = async (req, res) => {
       cloudinary.uploader
         .upload_stream(
           {
-            folder: "VideoVault/Profile",
+            folder: "StreamVault/Profile",
           },
           (error, result) => {
             if (error) reject(error);

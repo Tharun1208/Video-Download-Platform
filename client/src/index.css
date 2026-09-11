@@ -1,1 +1,395 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================================
+   VIDEO VAULT THEME VARIABLES
+   ========================================================= */
+
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --border-color: #e2e8f0;
+}
+
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
+html.dark,
+body.dark,
+:root.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-primary: #030712;
+  --bg-secondary: #111827;
+  --bg-card: #111827;
+  --bg-input: #1f2937;
+
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+
+  --border-color: #1f2937;
+}
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+
+html.light,
+body.light,
+:root.light,
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --border-color: #e2e8f0;
+}
+
+/* =========================================================
+   RESPONSIVE TYPOGRAPHY CONFIGURATION
+   Mobile (< 768px):
+     Heading: 20px
+     Sub-heading: 16px
+     Content: 14px
+   Tablet / Tab (768px - 1024px):
+     Heading: 32px
+     Sub-heading: 26px
+     Content: 20px
+   ========================================================= */
+
+:root {
+  --font-size-heading: 24px;
+  --font-size-subheading: 18px;
+  --font-size-content: 15px;
+}
+
+/* Mobile Screen Typography (< 768px) */
+@media (max-width: 767px) {
+  :root {
+    --font-size-heading: 20px;
+    --font-size-subheading: 16px;
+    --font-size-content: 14px;
+  }
+
+  h1, h2, .heading, .app-heading, .heading-responsive {
+    font-size: 20px !important;
+    line-height: 1.25 !important;
+  }
+
+  h3, h4, .sub-heading, .subheading, .app-subheading, .subheading-responsive {
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+  }
+
+  p, label, .content, .app-content, .content-responsive, .theme-text-secondary {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* Tablet / Tab Screen Typography (768px to 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --font-size-heading: 32px;
+    --font-size-subheading: 26px;
+    --font-size-content: 20px;
+  }
+
+  h1, h2, .heading, .app-heading, .heading-responsive {
+    font-size: 32px !important;
+    line-height: 1.25 !important;
+  }
+
+  h3, h4, .sub-heading, .subheading, .app-subheading, .subheading-responsive {
+    font-size: 26px !important;
+    line-height: 1.35 !important;
+  }
+
+  p, label, .content, .app-content, .content-responsive, .theme-text-secondary {
+    font-size: 20px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* Typography Utility Classes */
+.app-heading {
+  font-size: var(--font-size-heading);
+  font-weight: 700;
+}
+
+.app-subheading {
+  font-size: var(--font-size-subheading);
+  font-weight: 600;
+}
+
+.app-content {
+  font-size: var(--font-size-content);
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body {
+  margin: 0;
+
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+#root {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* =========================================================
+   THEME BACKGROUNDS
+   ========================================================= */
+
+.theme-bg {
+  background-color: var(--bg-primary) !important;
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.theme-card {
+  background-color: var(--bg-card) !important;
+}
+
+.theme-input {
+  background-color: var(--bg-input) !important;
+}
+
+/* =========================================================
+   THEME TEXT
+   ========================================================= */
+
+.theme-text {
+  color: var(--text-primary) !important;
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.theme-text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* =========================================================
+   THEME BORDER
+   ========================================================= */
+
+.theme-border {
+  border-color: var(--border-color) !important;
+}
+
+/* =========================================================
+   SELECT & OPTION THEMING
+   ========================================================= */
+
+select {
+  color-scheme: light;
+}
+
+html.dark select,
+body.dark select,
+:root.dark select,
+.dark select,
+[data-theme="dark"] select {
+  color-scheme: dark !important;
+}
+
+select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.dark select option,
+body.dark select option,
+:root.dark select option,
+.dark select option,
+[data-theme="dark"] select option {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+}
+
+html.light select option,
+body.light select option,
+:root.light select option,
+.light select option,
+[data-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+
+/* =========================================================
+   ANIMATIONS & KEYFRAMES
+   ========================================================= */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.45);
+  }
+}
+
+@keyframes bellWobble {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-12deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-8deg); }
+  75% { transform: rotate(4deg); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* =========================================================
+   UTILITY CLASSES & HOVER EFFECTS
+   ========================================================= */
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-wobble {
+  animation: bellWobble 1.5s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+.glow-hover {
+  transition: all 0.3s ease;
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 20px -3px rgba(59, 130, 246, 0.35);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.75);
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Custom Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.5);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.85);
+}

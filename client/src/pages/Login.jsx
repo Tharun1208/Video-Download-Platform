@@ -2,185 +2,249 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn } from "lucide-react";
 import {
-    MdVisibility,
-    MdVisibilityOff,
+  MdVisibility,
+  MdVisibilityOff,
 } from "react-icons/md";
+import toast from "react-hot-toast";
 
 import Button from "../components/common/Button";
+import Logo from "../components/common/Logo";
+import ConfirmationModal from "../components/common/ConfirmationModal";
 import { APP_NAME } from "../utils/constants";
 import { loginUser } from "../api/authApi";
 
 function Login() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "whatsapp",
+    confirmText: "Continue",
+    onConfirm: () => {},
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
+  };
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-    };
+  const detectClientLocationAndDevice = async () => {
+    let city = "";
+    let state = "";
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        try {
-            setLoading(true);
-
-            const response = await loginUser(formData);
-
-            if (response.data.success) {
-
-                // Save JWT Token
-                localStorage.setItem("token", response.data.token);
-
-                // Save User Details
-                localStorage.setItem(
-                    "user",
-                    JSON.stringify(response.data.user)
-                );
-
-                alert("✅ Login Successful!");
-
-                navigate("/dashboard");
-            }
-
-        } catch (error) {
-
-            alert(
-                error.response?.data?.message || "❌ Login Failed"
-            );
-
-        } finally {
-            setLoading(false);
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      if (res.ok) {
+        const data = await res.json();
+        city = data.city || data.region || "";
+        state = data.region || "";
+      }
+    } catch {
+      // Fallback: try alternative geo IP
+      try {
+        const res2 = await fetch("https://ipwho.is/");
+        if (res2.ok) {
+          const data2 = await res2.json();
+          city = data2.city || data2.region || "";
+          state = data2.region || "";
         }
-    };
+      } catch {
+        // Silent fallback
+      }
+    }
 
-    return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center px-5">
+    const device =
+      navigator.userAgentData?.platform ||
+      navigator.platform ||
+      (navigator.userAgent.includes("Mobile") ? "Mobile" : "Desktop");
 
-            <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 text-white transition-all duration-300 hover:border-blue-500 hover:shadow-blue-500/20">
+    return { city, state, device };
+  };
 
-                <div className="text-center mb-8">
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-                    <h1 className="text-4xl font-bold">
-                        {APP_NAME}
-                    </h1>
+    try {
+      setLoading(true);
 
-                    <p className="text-gray-400 mt-3">
-                        Welcome Back 👋
-                    </p>
+      const clientContext = await detectClientLocationAndDevice();
 
-                    <p className="text-gray-500 text-sm mt-1">
-                        Login to continue to your account.
-                    </p>
+      const payload = {
+        email: formData.email.trim(),
+        password: formData.password,
+        ...clientContext,
+      };
 
-                </div>
+      const response = await loginUser(payload);
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="space-y-5"
-                >
+      // Check if location or device change requires OTP verification
+      if (response.data.requiresOtp) {
+        localStorage.setItem(
+          "pendingLoginEmail",
+          formData.email.trim().toLowerCase()
+        );
 
-                    <div>
+        setModalConfig({
+          isOpen: true,
+          title: "Location / Device Change Detected 🛡️",
+          message:
+            response.data.message ||
+            "A new location or device was detected for your account. A 6-digit verification code (OTP) has been sent to your registered email.",
+          type: "warning",
+          confirmText: "Enter Verification Code",
+          onConfirm: () => {
+            setModalConfig((prev) => ({ ...prev, isOpen: false }));
+            navigate("/login-otp");
+          },
+        });
+        return;
+      }
 
-                        <label className="text-sm text-gray-300">
-                            Email Address
-                        </label>
+      // Normal Successful Login
+      if (response.data.success) {
+        // Save JWT Token
+        localStorage.setItem("token", response.data.token);
 
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="Enter your email"
-                            required
-                            className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        />
+        // Save User Details
+        localStorage.setItem("user", JSON.stringify(response.data.user));
 
-                    </div>
+        setModalConfig({
+          isOpen: true,
+          title: "Login Successful! 🎉",
+          message: `Welcome back, ${response.data.user?.name || "User"}! You are being redirected to your dashboard.`,
+          type: "whatsapp",
+          confirmText: "Go to Dashboard",
+          onConfirm: () => {
+            setModalConfig((prev) => ({ ...prev, isOpen: false }));
+            navigate("/dashboard");
+          },
+        });
 
-                    <div>
+        // Auto-redirect after short delay
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1600);
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Invalid email or password. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                        <label className="text-sm text-gray-300">
-                            Password
-                        </label>
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-5">
+      <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 text-white transition-all duration-300 hover:border-blue-500 hover:shadow-blue-500/20">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Logo size="lg" withText={false} animated={true} />
 
-                        <div className="relative">
+          <h1 className="text-4xl font-bold mt-3">
+            {APP_NAME}
+          </h1>
 
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="Enter your password"
-                                required
-                                className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                            />
+          <p className="text-gray-400 mt-3">
+            Welcome Back 👋
+          </p>
 
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-6 text-gray-400 hover:text-blue-400 transition-all duration-300 hover:scale-110 active:scale-95"
-                            >
-                                {showPassword ? (
-                                    <MdVisibilityOff size={22} />
-                                ) : (
-                                    <MdVisibility size={22} />
-                                )}
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <div className="flex justify-end">
-
-                        <button
-                            type="button"
-                            className="text-sm text-blue-500 hover:text-blue-400 transition-colors"
-                        >
-                            Forgot Password?
-                        </button>
-
-                    </div>
-
-                    <Button
-                        type="submit"
-                        icon={<LogIn size={20} />}
-                        className="w-full"
-                        disabled={loading}
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </Button>
-
-                </form>
-
-                <p className="text-center text-gray-400 mt-8">
-
-                    Don't have an account?
-
-                    <Link
-                        to="/register"
-                        className="ml-2 text-blue-500 hover:text-blue-400 transition-colors"
-                    >
-                        Register
-                    </Link>
-
-                </p>
-
-            </div>
-
+          <p className="text-gray-500 text-sm mt-1">
+            Login to continue to your account.
+          </p>
         </div>
-    );
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-sm text-gray-300">
+              Email Address
+            </label>
+
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              required
+              className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-300">
+              Password
+            </label>
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
+                className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-6 text-gray-400 hover:text-blue-400 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                {showPassword ? (
+                  <MdVisibilityOff size={22} />
+                ) : (
+                  <MdVisibility size={22} />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            icon={<LogIn size={20} />}
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+
+        <p className="text-center text-gray-400 mt-8">
+          Don't have an account?
+          <Link
+            to="/register"
+            className="ml-2 text-blue-500 hover:text-blue-400 transition-colors"
+          >
+            Register
+          </Link>
+        </p>
+      </div>
+
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        showCancel={false}
+      />
+    </div>
+  );
 }
 
 export default Login;

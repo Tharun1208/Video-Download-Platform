@@ -22,10 +22,21 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
     },
 
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+
+    resetPasswordExpire: {
+      type: Date,
+      default: null,
+    },
+
     avatar: {
       type: String,
       default: "",
     },
+
     lastDownloadDate: {
       type: Date,
       default: null,
@@ -33,7 +44,7 @@ const userSchema = new mongoose.Schema(
 
     plan: {
       type: String,
-      enum: ["Free", "Premium"],
+      enum: ["Free", "Bronze", "Silver", "Gold"],
       default: "Free",
     },
 
@@ -53,12 +64,78 @@ const userSchema = new mongoose.Schema(
       default: "User",
     },
 
-    favorites: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Video",
-      },
-    ],
+    // ============================
+    // THEME
+    // ============================
+
+    theme: {
+      type: String,
+      enum: ["light", "dark", "auto"],
+      default: "auto",
+    },
+
+    // ============================
+    // LAST LOGIN INFORMATION
+    // ============================
+
+    lastLoginCity: {
+      type: String,
+      default: "",
+    },
+
+    lastLoginState: {
+      type: String,
+      default: "",
+    },
+
+    lastLoginDevice: {
+      type: String,
+      default: "",
+    },
+
+    // ============================
+    // LOGIN OTP
+    // ============================
+
+    loginOtp: {
+      type: String,
+      default: null,
+    },
+
+    loginOtpExpire: {
+      type: Date,
+      default: null,
+    },
+
+    loginOtpVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    // ============================
+    // PENDING LOGIN INFORMATION
+    // ============================
+
+    pendingLoginCity: {
+      type: String,
+      default: "",
+    },
+
+    pendingLoginState: {
+      type: String,
+      default: "",
+    },
+
+    pendingLoginDevice: {
+      type: String,
+      default: "",
+    },
+
+    pendingLoginTheme: {
+      type: String,
+      enum: ["light", "dark"],
+      default: null,
+    },
   },
   {
     timestamps: true,

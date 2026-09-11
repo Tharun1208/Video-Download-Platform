@@ -5,10 +5,11 @@ import {
   Mail,
   ExternalLink
 } from "lucide-react";
+import Logo from "../common/Logo";
 
 function Footer() {
   return (
-    <footer className="bg-gray-950 border-t border-gray-800 text-gray-400 mt-16">
+    <footer className="theme-card border-t theme-border theme-text-secondary mt-16 transition-colors duration-300">
 
       <div className="max-w-7xl mx-auto px-8 py-12">
 
@@ -18,13 +19,9 @@ function Footer() {
 
           <div>
 
-            <h2 className="text-2xl font-bold text-blue-500">
+            <Logo asLink={true} size="md" />
 
-              VideoVault
-
-            </h2>
-
-            <p className="mt-4 leading-7">
+            <p className="mt-4 leading-7 theme-text-secondary">
 
               A secure video streaming and controlled download platform.
               Watch videos anywhere while managing downloads according to
@@ -38,7 +35,7 @@ function Footer() {
 
           <div>
 
-            <h3 className="text-white font-semibold text-lg mb-4">
+            <h3 className="theme-text font-semibold text-lg mb-4">
 
               Quick Links
 
@@ -46,25 +43,25 @@ function Footer() {
 
             <div className="flex flex-col gap-3">
 
-              <Link to="/" className="hover:text-blue-500">
+              <Link to="/" className="hover:text-blue-500 theme-text-secondary">
 
                 Home
 
               </Link>
 
-              <Link to="/login" className="hover:text-blue-500">
+              <Link to="/login" className="hover:text-blue-500 theme-text-secondary">
 
                 Login
 
               </Link>
 
-              <Link to="/register" className="hover:text-blue-500">
+              <Link to="/register" className="hover:text-blue-500 theme-text-secondary">
 
                 Register
 
               </Link>
 
-              <Link to="/subscription" className="hover:text-blue-500">
+              <Link to="/subscription" className="hover:text-blue-500 theme-text-secondary">
 
                 Subscription
 
@@ -78,7 +75,7 @@ function Footer() {
 
           <div>
 
-            <h3 className="text-white font-semibold text-lg mb-4">
+            <h3 className="theme-text font-semibold text-lg mb-4">
 
               Contact
 
@@ -90,7 +87,7 @@ function Footer() {
 
                 <Mail size={18} />
 
-                support@videovault.com
+                support@streamvault.com
 
               </div>
 
@@ -116,9 +113,9 @@ function Footer() {
 
         </div>
 
-        <div className="border-t border-gray-800 mt-10 pt-6 text-center">
+        <div className="border-t theme-border mt-10 pt-6 text-center theme-text-muted">
 
-          © 2026 VideoVault. All Rights Reserved.
+          © 2026 StreamVault. All Rights Reserved.
 
         </div>
 

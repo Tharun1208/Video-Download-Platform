@@ -23,3 +23,10 @@ Thumbs.db
 
 # IDE
 .vscode/
+
+# Python & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.cache/
+server/models/indictrans2-indic-en-1B/.cache/

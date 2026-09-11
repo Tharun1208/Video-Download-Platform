@@ -5,15 +5,14 @@ import {
   getVideoById,
   deleteVideo,
 } from "../controllers/videoController.js";
-
 import protect from "../middleware/authMiddleware.js";
 import adminOnly from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-// Public Routes
-router.get("/", getVideos);
-router.get("/:id", getVideoById);
+// Protected Routes
+router.get("/", protect, getVideos);
+router.get("/:id", protect, getVideoById);
 
 // Admin Routes
 router.post("/", protect, adminOnly, addVideo);

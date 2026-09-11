@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Video from "../models/Video.js";
 
 // ==========================================
@@ -15,7 +16,6 @@ export const addVideo = async (req, res) => {
       isPremium,
     } = req.body;
 
-    // Check if video already exists
     const exists = await Video.findOne({ youtubeId });
 
     if (exists) {
@@ -45,6 +45,8 @@ export const addVideo = async (req, res) => {
       video,
     });
   } catch (error) {
+    console.error("addVideo error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -54,9 +56,6 @@ export const addVideo = async (req, res) => {
 
 // ==========================================
 // Get All Videos
-// ==========================================
-// ==========================================
-// Get All Videos (Production Ready)
 // ==========================================
 export const getVideos = async (req, res) => {
   try {
@@ -93,7 +92,6 @@ export const getVideos = async (req, res) => {
         sortOption = { downloads: -1 };
         break;
 
-      case "latest":
       default:
         sortOption = { createdAt: -1 };
     }
@@ -120,22 +118,47 @@ export const getVideos = async (req, res) => {
       videos,
     });
   } catch (error) {
+    console.error("getVideos error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 // ==========================================
 // Get Single Video
 // ==========================================
 export const getVideoById = async (req, res) => {
   try {
-    const video = await Video.findById(req.params.id).populate(
+    const { id } = req.params;
+
+    console.log("Requested video ID:", id);
+
+    // ==========================================
+    // Validate MongoDB ObjectId
+    // ==========================================
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log("Invalid MongoDB video ID:", id);
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid video ID.",
+      });
+    }
+
+    // ==========================================
+    // Find Video
+    // ==========================================
+    const video = await Video.findById(id).populate(
       "uploader",
       "name email"
     );
 
+    // ==========================================
+    // Video Not Found
+    // ==========================================
     if (!video) {
       return res.status(404).json({
         success: false,
@@ -143,14 +166,23 @@ export const getVideoById = async (req, res) => {
       });
     }
 
-    video.views += 1;
+    // ==========================================
+    // Increase Views
+    // ==========================================
+    video.views = (video.views || 0) + 1;
+
     await video.save();
 
+    // ==========================================
+    // Response
+    // ==========================================
     res.status(200).json({
       success: true,
       video,
     });
   } catch (error) {
+    console.error("getVideoById error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -179,6 +211,8 @@ export const searchVideos = async (req, res) => {
       videos,
     });
   } catch (error) {
+    console.error("searchVideos error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -202,6 +236,8 @@ export const getVideosByCategory = async (req, res) => {
       videos,
     });
   } catch (error) {
+    console.error("getVideosByCategory error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -214,7 +250,19 @@ export const getVideosByCategory = async (req, res) => {
 // ==========================================
 export const deleteVideo = async (req, res) => {
   try {
-    const video = await Video.findById(req.params.id);
+    const { id } = req.params;
+
+    // ==========================================
+    // Validate MongoDB ObjectId
+    // ==========================================
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid video ID.",
+      });
+    }
+
+    const video = await Video.findById(id);
 
     if (!video) {
       return res.status(404).json({
@@ -230,6 +278,8 @@ export const deleteVideo = async (req, res) => {
       message: "Video deleted successfully.",
     });
   } catch (error) {
+    console.error("deleteVideo error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,

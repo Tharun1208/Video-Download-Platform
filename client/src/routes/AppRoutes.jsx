@@ -1,91 +1,190 @@
 import { Routes, Route } from "react-router-dom";
 
-import Home from "../pages/Home.jsx";
-import Login from "../pages/Login.jsx";
-import Register from "../pages/Register.jsx";
-import EditProfile from "../pages/EditProfile.jsx";
-import DashboardLayout from "../components/layout/DashboardLayout.jsx";
-import ProtectedRoute from "../routes/ProtectedRoute.jsx";
-import Dashboard from "../pages/Dashboard.jsx";
-import Videos from "../pages/Videos.jsx";
-import VideoDetails from "../pages/VideoDetails.jsx";
-import Downloads from "../pages/Downloads.jsx";
-import Profile from "../pages/Profile.jsx";
-import Subscription from "../pages/Subscription.jsx";
-import Settings from "../pages/Settings.jsx";
-import Notifications from "../pages/Notifications.jsx";
+import Home from "../pages/Home";
+import Login from "../pages/Login";
+import LoginOtp from "../pages/LoginOtp";
+import Register from "../pages/Register";
+import EditProfile from "../pages/EditProfile";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
-function AppRoutes(){
+import DashboardLayout from "../components/layout/DashboardLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
-return (
+import Dashboard from "../pages/Dashboard";
+import Videos from "../pages/Videos";
+import VideoDetails from "../pages/VideoDetails";
+import PexelsVideo from "../pages/PexelsVideo";
+import Downloads from "../pages/Downloads";
+import Profile from "../pages/Profile";
+import Subscription from "../pages/Subscription";
+import Settings from "../pages/Settings";
+import Notifications from "../pages/Notifications";
+import PaymentHistory from "../pages/PaymentHistory";
 
-<Routes>
+// Watch Party
+import CreateParty from "../pages/watchparty/CreateParty";
+import JoinParty from "../pages/watchparty/JoinParty";
+import WatchRoom from "../pages/watchparty/WatchRoom";
 
+import NotFound from "../pages/NotFound";
 
-{/* Public Pages */}
+function AppRoutes() {
+  return (
+    <Routes>
 
-<Route path="/" element={<Home/>}/>
+      {/* ================= PUBLIC ================= */}
 
-<Route path="/login" element={<Login/>}/>
+      <Route
+        path="/"
+        element={<Home />}
+      />
 
-<Route path="/register" element={<Register/>}/>
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
-<Route path="/edit-profile" element={<EditProfile />} />
+      <Route
+        path="/login-otp"
+        element={<LoginOtp />}
+      />
 
-{/* Pages with Sidebar + Navbar */}
+      <Route
+        path="/register"
+        element={<Register />}
+      />
 
-<Route element={<DashboardLayout/>}>
+      <Route
+        path="/forgot-password"
+        element={<ForgotPassword />}
+      />
 
-<Route path="/notifications" element={<Notifications/>}/>
-<Route 
-path="/dashboard" 
-element={<Dashboard/>}
-/>
+      <Route
+        path="/reset-password/:token"
+        element={<ResetPassword />}
+      />
 
+      {/* ================= PROTECTED ================= */}
 
-<Route 
-path="/videos" 
-element={<Videos/>}
-/>
+      <Route
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
 
+        {/* Dashboard */}
 
-<Route 
-path="/video/:id" 
-element={<VideoDetails/>}
-/>
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
+        {/* Videos */}
 
-<Route 
-path="/downloads" 
-element={<Downloads/>}
-/>
+        <Route
+          path="/browse-videos"
+          element={<Videos />}
+        />
 
+        <Route
+          path="/videos"
+          element={<Videos />}
+        />
 
-<Route 
-path="/profile" 
-element={<Profile/>}
-/>
+        {/* MongoDB / YouTube Video */}
 
+        <Route
+          path="/video/:id"
+          element={<VideoDetails />}
+        />
 
-<Route 
-path="/subscription" 
-element={<Subscription/>}
-/>
+        {/* Pexels Video */}
 
-<Route 
-path="/settings" 
-element={<Settings/>}
-/>
+        <Route
+          path="/pexels-video"
+          element={<PexelsVideo />}
+        />
 
+        {/* Downloads */}
 
-</Route>
+        <Route
+          path="/downloads"
+          element={<Downloads />}
+        />
 
+        {/* Profile */}
 
-</Routes>
+        <Route
+          path="/profile"
+          element={<Profile />}
+        />
 
-)
+        <Route
+          path="/edit-profile"
+          element={<EditProfile />}
+        />
 
+        {/* Subscription */}
+
+        <Route
+          path="/subscription"
+          element={<Subscription />}
+        />
+
+        <Route
+          path="/payment-history"
+          element={<PaymentHistory />}
+        />
+
+        {/* Settings */}
+
+        <Route
+          path="/settings"
+          element={<Settings />}
+        />
+
+        {/* Notifications */}
+
+        <Route
+          path="/notifications"
+          element={<Notifications />}
+        />
+
+      </Route>
+
+      {/* ================= WATCH PARTY ================= */}
+
+      <Route
+        path="/watch-party/create"
+        element={<CreateParty />}
+      />
+
+      <Route
+        path="/watch-party/create/:videoId"
+        element={<CreateParty />}
+      />
+
+      <Route
+        path="/watch-party/join"
+        element={<JoinParty />}
+      />
+
+      <Route
+        path="/watch-party/room/:roomCode"
+        element={<WatchRoom />}
+      />
+
+      {/* ================= 404 CATCH-ALL ================= */}
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
+
+    </Routes>
+  );
 }
-
 
 export default AppRoutes;
