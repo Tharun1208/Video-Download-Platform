@@ -94,6 +94,8 @@ function VideoCall({
   const screenTrackRef = useRef(null);
 
   const peerConnectionsRef = useRef({});
+  const remoteStreamsRef = useRef({});
+  const iceCandidateQueueRef = useRef({});
 
   // =========================================================
   // STATE
@@ -151,9 +153,11 @@ function VideoCall({
 
   const rtcConfig = {
     iceServers: [
-      {
-        urls: "stun:stun.l.google.com:19302",
-      },
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun3.l.google.com:19302" },
+      { urls: "stun:stun4.l.google.com:19302" },
     ],
   };
 
@@ -290,6 +294,10 @@ function VideoCall({
     remoteUserId,
     createOffer = false
   ) => {
+    if (!remoteUserId) {
+      return null;
+    }
+
     if (
       peerConnectionsRef.current[
         remoteUserId
@@ -329,17 +337,52 @@ function VideoCall({
     // -------------------------------------------------------
 
     peerConnection.ontrack = (event) => {
-      if (!event.streams?.[0]) {
-        return;
+      let stream =
+        event.streams &&
+        event.streams[0];
+
+      if (!stream) {
+        stream =
+          remoteStreamsRef.current[
+            remoteUserId
+          ] || new MediaStream();
+
+        if (
+          !stream
+            .getTracks()
+            .some(
+              (t) =>
+                t.id ===
+                event.track.id
+            )
+        ) {
+          stream.addTrack(
+            event.track
+          );
+        }
       }
 
-      const stream =
-        event.streams[0];
+      remoteStreamsRef.current[
+        remoteUserId
+      ] = stream;
 
       setRemoteStreams((prev) => ({
         ...prev,
         [remoteUserId]: stream,
       }));
+
+      setConnectedUsers((prev) => {
+        if (
+          prev.includes(remoteUserId)
+        ) {
+          return prev;
+        }
+
+        return [
+          ...prev,
+          remoteUserId,
+        ];
+      });
     };
 
     // -------------------------------------------------------
@@ -358,6 +401,7 @@ function VideoCall({
             roomCode,
             targetUserId:
               remoteUserId,
+            fromUserId: userId,
             candidate:
               event.candidate,
           }
@@ -371,7 +415,7 @@ function VideoCall({
     peerConnection.onconnectionstatechange =
       () => {
         console.log(
-          "Peer connection:",
+          "Peer connection state:",
           remoteUserId,
           peerConnection.connectionState
         );
@@ -384,6 +428,13 @@ function VideoCall({
           peerConnection.connectionState ===
             "disconnected"
         ) {
+          delete remoteStreamsRef.current[
+            remoteUserId
+          ];
+          delete iceCandidateQueueRef.current[
+            remoteUserId
+          ];
+
           setRemoteStreams((prev) => {
             const updated = {
               ...prev,
@@ -395,6 +446,13 @@ function VideoCall({
 
             return updated;
           });
+
+          setConnectedUsers((prev) =>
+            prev.filter(
+              (id) =>
+                id !== remoteUserId
+            )
+          );
         }
       };
 
@@ -410,6 +468,40 @@ function VideoCall({
     }
 
     return peerConnection;
+  };
+
+  // =========================================================
+  // FLUSH QUEUED ICE CANDIDATES
+  // =========================================================
+
+  const flushIceCandidates = async (
+    targetUserId,
+    peerConnection
+  ) => {
+    const queue =
+      iceCandidateQueueRef.current[
+        targetUserId
+      ];
+
+    if (queue && queue.length > 0) {
+      const candidates = [...queue];
+      iceCandidateQueueRef.current[
+        targetUserId
+      ] = [];
+
+      for (const cand of candidates) {
+        try {
+          await peerConnection.addIceCandidate(
+            new RTCIceCandidate(cand)
+          );
+        } catch (err) {
+          console.error(
+            "Error adding queued ICE candidate:",
+            err
+          );
+        }
+      }
+    }
   };
 
   // =========================================================
@@ -434,6 +526,7 @@ function VideoCall({
           roomCode,
           targetUserId:
             remoteUserId,
+          fromUserId: userId,
           offer,
         }
       );
@@ -466,6 +559,7 @@ function VideoCall({
       userId: remoteUserId,
     }) => {
       if (
+        !remoteUserId ||
         remoteUserId === userId
       ) {
         return;
@@ -505,8 +599,21 @@ function VideoCall({
 
     const handleOffer = async ({
       fromUserId,
+      targetUserId,
       offer,
     }) => {
+      if (!fromUserId || !offer) {
+        return;
+      }
+
+      if (
+        targetUserId &&
+        String(targetUserId) !==
+          String(userId)
+      ) {
+        return;
+      }
+
       try {
         const peerConnection =
           createPeerConnection(
@@ -514,10 +621,32 @@ function VideoCall({
             false
           );
 
+        if (!peerConnection) {
+          return;
+        }
+
+        setConnectedUsers((prev) => {
+          if (
+            prev.includes(fromUserId)
+          ) {
+            return prev;
+          }
+
+          return [
+            ...prev,
+            fromUserId,
+          ];
+        });
+
         await peerConnection.setRemoteDescription(
           new RTCSessionDescription(
             offer
           )
+        );
+
+        await flushIceCandidates(
+          fromUserId,
+          peerConnection
         );
 
         const answer =
@@ -533,6 +662,7 @@ function VideoCall({
             roomCode,
             targetUserId:
               fromUserId,
+            fromUserId: userId,
             answer,
           }
         );
@@ -550,8 +680,21 @@ function VideoCall({
 
     const handleAnswer = async ({
       fromUserId,
+      targetUserId,
       answer,
     }) => {
+      if (!fromUserId || !answer) {
+        return;
+      }
+
+      if (
+        targetUserId &&
+        String(targetUserId) !==
+          String(userId)
+      ) {
+        return;
+      }
+
       const peerConnection =
         peerConnectionsRef.current[
           fromUserId
@@ -561,11 +704,29 @@ function VideoCall({
         return;
       }
 
+      setConnectedUsers((prev) => {
+        if (
+          prev.includes(fromUserId)
+        ) {
+          return prev;
+        }
+
+        return [
+          ...prev,
+          fromUserId,
+        ];
+      });
+
       try {
         await peerConnection.setRemoteDescription(
           new RTCSessionDescription(
             answer
           )
+        );
+
+        await flushIceCandidates(
+          fromUserId,
+          peerConnection
         );
       } catch (error) {
         console.error(
@@ -581,18 +742,47 @@ function VideoCall({
 
     const handleIceCandidate = async ({
       fromUserId,
+      targetUserId,
       candidate,
     }) => {
+      if (
+        !fromUserId ||
+        !candidate
+      ) {
+        return;
+      }
+
+      if (
+        targetUserId &&
+        String(targetUserId) !==
+          String(userId)
+      ) {
+        return;
+      }
+
       const peerConnection =
         peerConnectionsRef.current[
           fromUserId
         ];
 
-      if (!peerConnection) {
-        return;
-      }
+      if (
+        !peerConnection ||
+        !peerConnection.remoteDescription ||
+        !peerConnection.remoteDescription.type
+      ) {
+        if (
+          !iceCandidateQueueRef
+            .current[fromUserId]
+        ) {
+          iceCandidateQueueRef.current[
+            fromUserId
+          ] = [];
+        }
 
-      if (!candidate) {
+        iceCandidateQueueRef.current[
+          fromUserId
+        ].push(candidate);
+
         return;
       }
 
@@ -617,6 +807,10 @@ function VideoCall({
     const handleUserLeft = ({
       userId: remoteUserId,
     }) => {
+      if (!remoteUserId) {
+        return;
+      }
+
       console.log(
         "Video user left:",
         remoteUserId
@@ -634,6 +828,13 @@ function VideoCall({
           remoteUserId
         ];
       }
+
+      delete remoteStreamsRef.current[
+        remoteUserId
+      ];
+      delete iceCandidateQueueRef.current[
+        remoteUserId
+      ];
 
       setConnectedUsers((prev) =>
         prev.filter(
@@ -1023,6 +1224,10 @@ function VideoCall({
 
     peerConnectionsRef.current =
       {};
+    remoteStreamsRef.current =
+      {};
+    iceCandidateQueueRef.current =
+      {};
 
     if (localVideoRef.current) {
       localVideoRef.current.srcObject =
@@ -1091,6 +1296,10 @@ function VideoCall({
 
       peerConnectionsRef.current =
         {};
+      remoteStreamsRef.current =
+        {};
+      iceCandidateQueueRef.current =
+        {};
     };
   }, []);
 
@@ -1098,10 +1307,14 @@ function VideoCall({
   // REMOTE USERS
   // =========================================================
 
-  const remoteUsers =
-    connectedUsers.filter(
-      (id) => id !== userId
-    );
+  const remoteUsers = Array.from(
+    new Set([
+      ...connectedUsers,
+      ...Object.keys(remoteStreams),
+    ])
+  ).filter(
+    (id) => id && String(id) !== String(userId)
+  );
 
   // =========================================================
   // UI
@@ -1439,12 +1652,19 @@ function RemoteVideo({
 
     videoRef.current
       .play()
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("Remote video auto-play prevented:", err);
+      });
   }, [stream]);
 
   return (
     <div
-      className={`relative aspect-video rounded-2xl overflow-hidden bg-black border ${
+      onClick={() => {
+        if (videoRef.current && videoRef.current.paused) {
+          videoRef.current.play().catch(() => {});
+        }
+      }}
+      className={`relative aspect-video rounded-2xl overflow-hidden bg-black border cursor-pointer ${
         isDark
           ? "border-[#1E3A5F]"
           : "border-slate-200"
@@ -1455,6 +1675,11 @@ function RemoteVideo({
           ref={videoRef}
           autoPlay
           playsInline
+          onLoadedMetadata={() => {
+            videoRef.current
+              ?.play()
+              .catch(() => {});
+          }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
@@ -1467,7 +1692,7 @@ function RemoteVideo({
         >
           <UserCircle
             size={48}
-            className="text-cyan-500"
+            className="text-cyan-500 animate-pulse"
           />
 
           <p
@@ -1477,7 +1702,7 @@ function RemoteVideo({
                 : "text-slate-500"
             }`}
           >
-            Connecting...
+            Connecting to participant...
           </p>
         </div>
       )}

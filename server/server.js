@@ -816,18 +816,19 @@ io.on(
 
     socket.on(
       "video-call-offer",
-      ({ roomCode, targetUserId, offer }) => {
+      ({ roomCode, targetUserId, offer, fromUserId }) => {
         try {
           if (!roomCode || !targetUserId || !offer) return;
           const code = String(roomCode).toUpperCase();
           const roomUsers = rooms.get(code);
-          const fromUserId = socket.data.userId;
+          const senderId = fromUserId || socket.data.userId;
 
           if (roomUsers) {
             for (const [targetSocketId, user] of roomUsers.entries()) {
               if (String(user.userId) === String(targetUserId)) {
                 io.to(targetSocketId).emit("video-call-offer", {
-                  fromUserId,
+                  fromUserId: senderId,
+                  targetUserId,
                   offer,
                 });
                 return;
@@ -836,7 +837,7 @@ io.on(
           }
 
           socket.to(code).emit("video-call-offer", {
-            fromUserId,
+            fromUserId: senderId,
             targetUserId,
             offer,
           });
@@ -848,18 +849,19 @@ io.on(
 
     socket.on(
       "video-call-answer",
-      ({ roomCode, targetUserId, answer }) => {
+      ({ roomCode, targetUserId, answer, fromUserId }) => {
         try {
           if (!roomCode || !targetUserId || !answer) return;
           const code = String(roomCode).toUpperCase();
           const roomUsers = rooms.get(code);
-          const fromUserId = socket.data.userId;
+          const senderId = fromUserId || socket.data.userId;
 
           if (roomUsers) {
             for (const [targetSocketId, user] of roomUsers.entries()) {
               if (String(user.userId) === String(targetUserId)) {
                 io.to(targetSocketId).emit("video-call-answer", {
-                  fromUserId,
+                  fromUserId: senderId,
+                  targetUserId,
                   answer,
                 });
                 return;
@@ -868,7 +870,7 @@ io.on(
           }
 
           socket.to(code).emit("video-call-answer", {
-            fromUserId,
+            fromUserId: senderId,
             targetUserId,
             answer,
           });
@@ -880,18 +882,19 @@ io.on(
 
     socket.on(
       "video-call-ice-candidate",
-      ({ roomCode, targetUserId, candidate }) => {
+      ({ roomCode, targetUserId, candidate, fromUserId }) => {
         try {
           if (!roomCode || !targetUserId || !candidate) return;
           const code = String(roomCode).toUpperCase();
           const roomUsers = rooms.get(code);
-          const fromUserId = socket.data.userId;
+          const senderId = fromUserId || socket.data.userId;
 
           if (roomUsers) {
             for (const [targetSocketId, user] of roomUsers.entries()) {
               if (String(user.userId) === String(targetUserId)) {
                 io.to(targetSocketId).emit("video-call-ice-candidate", {
-                  fromUserId,
+                  fromUserId: senderId,
+                  targetUserId,
                   candidate,
                 });
                 return;
@@ -900,7 +903,7 @@ io.on(
           }
 
           socket.to(code).emit("video-call-ice-candidate", {
-            fromUserId,
+            fromUserId: senderId,
             targetUserId,
             candidate,
           });
