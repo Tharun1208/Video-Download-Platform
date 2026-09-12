@@ -4,7 +4,7 @@ import axios from "axios";
 // API BASE URL
 // ======================================================
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5005";
+const BASE = import.meta.env.VITE_API_URL || "https://video-download-platform.onrender.com";
 const API_URL = BASE.endsWith("/api") ? BASE : `${BASE}/api`;
 
 // ======================================================

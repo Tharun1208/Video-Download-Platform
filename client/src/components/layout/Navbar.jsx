@@ -86,7 +86,7 @@ function Navbar() {
 
   const fetchUser = async () => {
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5005";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://video-download-platform.onrender.com";
       const response = await axios.get(
         `${baseUrl}/api/users/profile`,
         {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Users,
@@ -13,9 +13,19 @@ import Navbar from "../../components/layout/Navbar";
 
 function JoinParty() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [roomCode, setRoomCode] = useState("");
+  const [roomCode, setRoomCode] = useState(() => {
+    return (searchParams.get("room") || "").toUpperCase().replace(/\s/g, "").slice(0, 6);
+  });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const urlRoom = searchParams.get("room");
+    if (urlRoom) {
+      setRoomCode(urlRoom.toUpperCase().replace(/\s/g, "").slice(0, 6));
+    }
+  }, [searchParams]);
 
   const handleJoin = async (e) => {
     e.preventDefault();
@@ -43,11 +53,9 @@ function JoinParty() {
         return;
       }
 
-      const API_URL = import.meta.env.VITE_API_URL;
-
-      if (!API_URL) {
-        throw new Error("VITE_API_URL is not configured");
-      }
+      const API_URL =
+        import.meta.env.VITE_API_URL ||
+        "https://video-download-platform.onrender.com";
 
       const response = await fetch(
         `${API_URL}/api/rooms/${code}`,

@@ -49,7 +49,9 @@ function CreateParty() {
     try {
       setLoading(true);
 
-      const API_URL = import.meta.env.VITE_API_URL;
+      const API_URL =
+        import.meta.env.VITE_API_URL ||
+        "https://video-download-platform.onrender.com";
 
       console.log("=================================");
       console.log("CREATING WATCH PARTY");

@@ -22,7 +22,7 @@ function ResetPassword() {
       setLoading(true);
 
 
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5005";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://video-download-platform.onrender.com";
       const response = await axios.put(
         `${baseUrl}/api/auth/reset-password/${token}`,
 

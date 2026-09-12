@@ -23,7 +23,7 @@ import LanguageDropdownTable from "./LanguageDropdownTable";
 import { getLanguageObj } from "./languageData";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5005";
+  import.meta.env.VITE_API_URL || "https://video-download-platform.onrender.com";
 
 const TRANSLATION_API_URL =
   import.meta.env.VITE_TRANSLATION_API_URL ||
