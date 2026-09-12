@@ -18,6 +18,7 @@ import roomRoutes from "./routes/roomRoutes.js";
 import pexelsRoutes from "./routes/pexelsRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import translationRoutes from "./routes/translationRoutes.js";
+import Room from "./models/Room.js";
 
 // ==========================================
 // DATABASE
@@ -284,6 +285,25 @@ const io = new Server(server, {
 const rooms = new Map();
 const roomMessages = new Map();
 
+// Helper to get active deduplicated participants for a room
+const getRoomParticipants = (code) => {
+  if (!rooms.has(code)) return [];
+  const roomUsers = rooms.get(code);
+  const uniqueUsers = new Map();
+
+  for (const user of roomUsers.values()) {
+    if (user.userId && !uniqueUsers.has(String(user.userId))) {
+      uniqueUsers.set(String(user.userId), {
+        userId: user.userId,
+        name: user.name || "User",
+        socketId: user.socketId,
+      });
+    }
+  }
+
+  return Array.from(uniqueUsers.values());
+};
+
 // ==========================================
 // SOCKET CONNECTION
 // ==========================================
@@ -371,31 +391,26 @@ io.on(
           );
 
           // ====================================
-          // SEND EXISTING USERS TO NEW USER
+          // BROADCAST ACTIVE PARTICIPANTS
           // ====================================
 
-          const existingUsers =
-            [
-              ...roomUsers.values(),
-            ].filter(
-              (user) =>
-                user.socketId !==
-                socket.id
-            );
+          const activeParticipants = getRoomParticipants(code);
+          io.to(code).emit("participants-update", activeParticipants);
 
-          existingUsers.forEach(
-            (user) => {
-              socket.emit(
-                "user-joined",
-                {
-                  userId:
-                    user.userId,
-
-                  name:
-                    user.name,
-                }
-              );
+          // Sync participant to Room document in MongoDB
+          Room.updateOne(
+            { roomCode: code },
+            {
+              $addToSet: {
+                participants: {
+                  userId,
+                  name: userName || "User",
+                  isHost: false,
+                },
+              },
             }
+          ).catch((err) =>
+            console.error("Room participant DB sync error:", err)
           );
 
           // ====================================
@@ -406,7 +421,7 @@ io.on(
           socket.emit("chat-history", history);
 
           // ====================================
-          // TELL OTHER USERS
+          // NOTIFY OTHER USERS (FOR TOASTS)
           // ====================================
 
           socket
@@ -429,6 +444,21 @@ io.on(
         }
       }
     );
+
+    // ========================================
+    // GET PARTICIPANTS ON DEMAND
+    // ========================================
+
+    socket.on("get-participants", ({ roomCode }) => {
+      try {
+        if (!roomCode) return;
+        const code = String(roomCode).toUpperCase();
+        const activeParticipants = getRoomParticipants(code);
+        socket.emit("participants-update", activeParticipants);
+      } catch (err) {
+        console.error("get-participants error:", err);
+      }
+    });
 
     // ========================================
     // VIDEO PLAY
@@ -733,6 +763,9 @@ io.on(
                 }
               );
 
+            const updatedParticipants = getRoomParticipants(code);
+            io.to(code).emit("participants-update", updatedParticipants);
+
             if (
               roomUsers.size ===
               0
@@ -977,6 +1010,9 @@ io.on(
                   userId,
                 }
               );
+
+            const updatedParticipants = getRoomParticipants(roomCode);
+            io.to(roomCode).emit("participants-update", updatedParticipants);
 
             if (
               roomUsers.size ===

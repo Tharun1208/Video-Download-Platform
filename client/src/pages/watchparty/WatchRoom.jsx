@@ -260,15 +260,45 @@ function WatchRoom() {
 
         setRoom(fetchedRoom);
 
-        if (
-          Array.isArray(
-            fetchedRoom.participants
-          )
-        ) {
-          setParticipants(
-            fetchedRoom.participants
+        let initialParticipants = Array.isArray(fetchedRoom.participants)
+          ? [...fetchedRoom.participants]
+          : [];
+
+        // Ensure host is in initial list
+        if (fetchedRoom?.host?.userId) {
+          const hostExists = initialParticipants.some(
+            (p) =>
+              String(p?.userId || p?._id || p?.id) ===
+              String(fetchedRoom.host.userId)
           );
+          if (!hostExists) {
+            initialParticipants.push({
+              userId: fetchedRoom.host.userId,
+              name: fetchedRoom.host.name || "Host",
+              isHost: true,
+            });
+          }
         }
+
+        // Ensure current user is in initial list
+        if (userId) {
+          const selfExists = initialParticipants.some(
+            (p) =>
+              String(p?.userId || p?._id || p?.id) ===
+              String(userId)
+          );
+          if (!selfExists) {
+            initialParticipants.push({
+              userId,
+              name: userName || "You",
+              isHost:
+                String(userId) ===
+                String(fetchedRoom?.host?.userId),
+            });
+          }
+        }
+
+        setParticipants(initialParticipants);
       } catch (error) {
         console.error(
           "Room error:",
@@ -324,6 +354,82 @@ function WatchRoom() {
       userId,
       userName,
     });
+
+    socket.emit("get-participants", {
+      roomCode: roomCode.toUpperCase(),
+    });
+
+    // Ensure self is in participants state
+    setParticipants((prev) => {
+      const exists = prev.some(
+        (p) =>
+          String(p?.userId || p?._id || p?.id) ===
+          String(userId)
+      );
+      if (exists) return prev;
+      return [
+        ...prev,
+        {
+          userId,
+          name: userName || "You",
+          isHost: String(userId) === String(hostId),
+        },
+      ];
+    });
+
+    // =======================================================
+    // PARTICIPANTS UPDATE (REAL-TIME ACTIVE LIST)
+    // =======================================================
+
+    const handleParticipantsUpdate = (activeList) => {
+      console.log("Participants update received:", activeList);
+      if (!Array.isArray(activeList)) return;
+
+      setParticipants((prev) => {
+        const userMap = new Map();
+
+        // 1. Add active users from server
+        activeList.forEach((u) => {
+          const uId = u?.userId || u?._id || u?.id;
+          if (uId) {
+            userMap.set(String(uId), {
+              userId: uId,
+              name: u.name || "User",
+              isHost:
+                String(uId) === String(hostId) ||
+                Boolean(u.isHost),
+            });
+          }
+        });
+
+        // 2. Ensure current user is always included
+        if (userId && !userMap.has(String(userId))) {
+          userMap.set(String(userId), {
+            userId,
+            name: userName || "You",
+            isHost: String(userId) === String(hostId),
+          });
+        }
+
+        // 3. Ensure host is included if known
+        if (hostId && !userMap.has(String(hostId))) {
+          const prevHost = prev.find(
+            (p) =>
+              String(p?.userId || p?._id || p?.id) ===
+              String(hostId)
+          );
+          userMap.set(String(hostId), {
+            userId: hostId,
+            name: prevHost?.name || room?.host?.name || "Host",
+            isHost: true,
+          });
+        }
+
+        return Array.from(userMap.values());
+      });
+    };
+
+    socket.on("participants-update", handleParticipantsUpdate);
 
     // =======================================================
     // USER JOINED
@@ -590,6 +696,7 @@ function WatchRoom() {
     // =======================================================
 
     return () => {
+      socket.off("participants-update", handleParticipantsUpdate);
       socket.off("user-joined", handleUserJoined);
       socket.off("user-left", handleUserLeft);
       socket.off("video-play", handleVideoPlay);

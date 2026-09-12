@@ -159,6 +159,30 @@ export const getRoom = async (req, res) => {
       });
     }
 
+    // Ensure authenticated user is recorded as participant in room
+    const currentUserId = req.user?._id || req.user?.id;
+    const currentUserName =
+      req.user?.name || req.user?.username || "User";
+
+    if (currentUserId) {
+      if (!Array.isArray(room.participants)) {
+        room.participants = [];
+      }
+
+      const alreadyIn = room.participants.some(
+        (p) => String(p.userId) === String(currentUserId)
+      );
+
+      if (!alreadyIn) {
+        room.participants.push({
+          userId: currentUserId,
+          name: currentUserName,
+          isHost: String(currentUserId) === String(room.host?.userId),
+        });
+        await room.save();
+      }
+    }
+
     return res.status(200).json({
       success: true,
       room,

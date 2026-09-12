@@ -6,13 +6,28 @@ import {
 function ParticipantList({
   participants = [],
   hostId,
+  currentUserId,
 }) {
+  // Deduplicate participants list by userId
+  const uniqueParticipants = [];
+  const seenIds = new Set();
+
+  for (const user of participants) {
+    const pId = String(user?.userId || user?._id || user?.id || "");
+    if (pId && !seenIds.has(pId)) {
+      seenIds.add(pId);
+      uniqueParticipants.push(user);
+    } else if (!pId) {
+      uniqueParticipants.push(user);
+    }
+  }
+
   return (
     <div className="p-4 sm:p-5">
 
       {/* EMPTY */}
 
-      {participants.length === 0 ? (
+      {uniqueParticipants.length === 0 ? (
 
         <div className="py-8 text-center theme-text-muted">
           No participants
@@ -22,7 +37,7 @@ function ParticipantList({
 
         <div className="space-y-3">
 
-          {participants.map((user, index) => {
+          {uniqueParticipants.map((user, index) => {
 
             const participantId =
               user?.userId ||
@@ -32,6 +47,10 @@ function ParticipantList({
             const isHost =
               String(participantId) === String(hostId) ||
               user?.isHost;
+
+            const isCurrentUser =
+              currentUserId &&
+              String(participantId) === String(currentUserId);
 
             const participantName =
               user?.name ||
@@ -92,8 +111,13 @@ function ParticipantList({
 
                   <div className="min-w-0">
 
-                    <p className="font-semibold truncate">
-                      {participantName}
+                    <p className="font-semibold truncate flex items-center gap-1.5">
+                      <span>{participantName}</span>
+                      {isCurrentUser && (
+                        <span className="text-[10px] font-medium bg-blue-500/15 text-blue-400 border border-blue-500/30 px-1.5 py-0.2 rounded-md">
+                          You
+                        </span>
+                      )}
                     </p>
 
                     <div className="flex items-center gap-1.5 text-xs text-green-500">
