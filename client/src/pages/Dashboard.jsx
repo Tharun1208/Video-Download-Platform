@@ -929,9 +929,9 @@ function Dashboard() {
             <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-              {/* Left Side: Headlines & Action bar */}
-              <div className="lg:col-span-7 xl:col-span-8">
+            <div className="relative z-10 max-w-3xl">
+              {/* Headlines & Action bar */}
+              <div>
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                     <Sparkles size={13} className="text-blue-500" />
@@ -946,7 +946,7 @@ function Dashboard() {
                 <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
                   Watch together with anyone, anywhere.
                 </h2>
-                <p className="theme-text-secondary text-sm sm:text-base mt-2 max-w-xl leading-relaxed">
+                <p className="theme-text-secondary text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
                   Start a private theater room, invite friends, and enjoy perfectly synchronized video playback, video calls, and live reactions.
                 </p>
 
@@ -1000,29 +1000,6 @@ function Dashboard() {
                     <span>Need help joining? Open code keypad</span>
                     <ArrowRight size={12} />
                   </Link>
-                </div>
-              </div>
-
-              {/* Right Side: Google Meet style visual theater card */}
-              <div className="lg:col-span-5 xl:col-span-4 flex justify-center">
-                <div className="w-full max-w-sm p-5 rounded-2xl bg-gradient-to-b from-blue-500/10 via-indigo-500/5 to-purple-500/10 border theme-border shadow-inner text-center">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-500 mb-3 shadow-md">
-                    <Users size={32} />
-                  </div>
-                  <h4 className="font-bold text-base theme-text">
-                    Host or Join in Seconds
-                  </h4>
-                  <p className="text-xs theme-text-secondary mt-1 leading-relaxed">
-                    Enjoy low-latency WebRTC group video calls and synchronized movies directly in your browser.
-                  </p>
-                  <div className="flex items-center justify-center gap-2 mt-4">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                      ⚡ Instant Sync
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                      🔒 Private Rooms
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
