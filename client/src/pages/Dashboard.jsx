@@ -10,17 +10,42 @@ import {
   Users,
   Zap,
   Sparkles,
+  Keyboard,
+  Plus,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { getProfile } from "../api/userApi";
 import { applyTheme, getSavedTheme } from "../utils/theme";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [, setRenderTrigger] = useState(0);
+  const [joinCode, setJoinCode] = useState("");
+
+  const handleJoinParty = (e) => {
+    e?.preventDefault();
+    const raw = joinCode.trim();
+    if (!raw) return;
+
+    let code = raw;
+    if (raw.includes("room/")) {
+      code = raw.split("room/")[1].split("?")[0].split("/")[0];
+    } else if (raw.includes("room=")) {
+      const match = raw.match(/room=([a-zA-Z0-9]+)/);
+      if (match) code = match[1];
+    }
+    code = code.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase();
+
+    if (code.length === 6) {
+      navigate(`/watch-party/room/${code}`);
+    } else {
+      navigate(`/watch-party/join?room=${code}`);
+    }
+  };
 
   // ==========================================
   // SYNC WITH THEME CHANGES
@@ -898,224 +923,109 @@ function Dashboard() {
           className="mt-6 sm:mt-8"
         >
 
-          {/* ATTRACTIVE SECTION HEADER */}
-          <div className="mb-4 sm:mb-6">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-indigo-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-sm">
-                <Sparkles size={13} className="text-pink-500" />
-                Social Lounge
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                Live Sync
-              </span>
+          {/* GOOGLE MEET STYLE WATCH PARTY BAR */}
+          <div className="theme-card border theme-border rounded-3xl p-6 sm:p-8 md:p-10 shadow-xl relative overflow-hidden transition-all duration-300">
+            {/* Ambient background glow */}
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+              {/* Left Side: Headlines & Action bar */}
+              <div className="lg:col-span-7 xl:col-span-8">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    <Sparkles size={13} className="text-blue-500" />
+                    Watch Party & Call
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Live Sync & Video
+                  </span>
+                </div>
+
+                <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+                  Watch together with anyone, anywhere.
+                </h2>
+                <p className="theme-text-secondary text-sm sm:text-base mt-2 max-w-xl leading-relaxed">
+                  Start a private theater room, invite friends, and enjoy perfectly synchronized video playback, video calls, and live reactions.
+                </p>
+
+                {/* Google Meet style input & button row */}
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-6 pt-1">
+                  {/* New Watch Party Button */}
+                  <Link
+                    to="/watch-party/create"
+                    className="inline-flex items-center gap-2.5 px-5 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-semibold text-sm sm:text-base shadow-lg shadow-blue-600/25 transition-all duration-200 cursor-pointer shrink-0"
+                  >
+                    <Video size={19} />
+                    <span>New Watch Party</span>
+                  </Link>
+
+                  {/* Join Input & Button Form */}
+                  <form
+                    onSubmit={handleJoinParty}
+                    className="flex items-center gap-2.5 flex-1 min-w-[260px] max-w-md"
+                  >
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none theme-text-muted">
+                        <Keyboard size={18} />
+                      </div>
+                      <input
+                        type="text"
+                        value={joinCode}
+                        onChange={(e) => setJoinCode(e.target.value)}
+                        placeholder="Enter a code or link"
+                        className="w-full h-12 pl-10 pr-4 rounded-xl theme-card border theme-border theme-text text-sm sm:text-base placeholder:theme-text-muted focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!joinCode.trim()}
+                      className={`h-12 px-6 rounded-xl font-bold text-sm transition-all duration-200 shrink-0 ${
+                        joinCode.trim()
+                          ? "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/25 cursor-pointer hover:scale-105 active:scale-95"
+                          : "theme-card border theme-border theme-text-muted cursor-not-allowed opacity-50"
+                      }`}
+                    >
+                      Join
+                    </button>
+                  </form>
+                </div>
+
+                <div className="flex items-center gap-2 mt-4 text-xs theme-text-muted">
+                  <Link
+                    to="/watch-party/join"
+                    className="text-blue-500 hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Need help joining? Open code keypad</span>
+                    <ArrowRight size={12} />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right Side: Google Meet style visual theater card */}
+              <div className="lg:col-span-5 xl:col-span-4 flex justify-center">
+                <div className="w-full max-w-sm p-5 rounded-2xl bg-gradient-to-b from-blue-500/10 via-indigo-500/5 to-purple-500/10 border theme-border shadow-inner text-center">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-500 mb-3 shadow-md">
+                    <Users size={32} />
+                  </div>
+                  <h4 className="font-bold text-base theme-text">
+                    Host or Join in Seconds
+                  </h4>
+                  <p className="text-xs theme-text-secondary mt-1 leading-relaxed">
+                    Enjoy low-latency WebRTC group video calls and synchronized movies directly in your browser.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                      ⚡ Instant Sync
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                      🔒 Private Rooms
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-600 dark:from-purple-400 dark:via-pink-300 dark:to-indigo-300 bg-clip-text text-transparent">
-                Watch Party
-              </span>
-            </h2>
-            <p className="theme-text-secondary text-sm sm:text-base mt-1">
-              Stream videos in real-time synchronization with friends, complete with live chat and interactive reactions.
-            </p>
-          </div>
-
-          <div
-            className="
-              grid
-              grid-cols-1
-              md:grid-cols-2
-              gap-4
-              sm:gap-6
-            "
-          >
-
-            {/* CREATE WATCH PARTY */}
-
-            <Link
-              to="/watch-party/create"
-              className="
-                group
-                relative
-                overflow-hidden
-                theme-card
-                border
-                theme-border
-                rounded-2xl
-                p-5
-                sm:p-6
-                md:p-7
-                transition-all
-                duration-300
-                hover:-translate-y-1
-                sm:hover:-translate-y-2
-                hover:border-blue-500
-                hover:shadow-2xl
-                hover:shadow-blue-500/15
-              "
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/15 transition-all duration-500 pointer-events-none" />
-
-              <div className="flex items-center justify-between gap-4">
-
-                <div
-                  className="
-                    p-3
-                    sm:p-4
-                    bg-gradient-to-br
-                    from-blue-500/15
-                    to-indigo-500/10
-                    rounded-xl
-                    transition-all
-                    duration-300
-                    group-hover:from-blue-500/25
-                    group-hover:to-indigo-500/20
-                    group-hover:scale-105
-                    sm:group-hover:scale-110
-                    border
-                    border-blue-500/20
-                  "
-                >
-
-                  <Video
-                    size={26}
-                    className="text-blue-500 dark:text-blue-400 sm:w-7 sm:h-7"
-                  />
-
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:inline-block">
-                    Host
-                  </span>
-                  <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">
-                    <ArrowRight
-                      size={16}
-                      className="
-                        text-blue-500
-                        group-hover:text-white
-                        transition-transform
-                        duration-300
-                        group-hover:translate-x-0.5
-                      "
-                    />
-                  </div>
-                </div>
-
-              </div>
-
-              <h3 className="text-lg sm:text-xl font-bold mt-5 sm:mt-6 group-hover:text-blue-500 transition-colors">
-                Create Watch Party
-              </h3>
-
-              <p className="theme-text-secondary mt-2 text-sm sm:text-base leading-relaxed">
-                Start your own private cinema room, invite friends with a share code, and control playback together in real time.
-              </p>
-
-              <div className="flex flex-wrap gap-2 mt-4 sm:mt-5">
-                <span className="text-xs px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium border border-blue-500/20">
-                  Host Theater
-                </span>
-                <span className="text-xs px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 font-medium border border-green-500/20">
-                  Real-time Sync
-                </span>
-              </div>
-
-            </Link>
-
-            {/* JOIN WATCH PARTY */}
-
-            <Link
-              to="/watch-party/join"
-              className="
-                group
-                relative
-                overflow-hidden
-                theme-card
-                border
-                theme-border
-                rounded-2xl
-                p-5
-                sm:p-6
-                md:p-7
-                transition-all
-                duration-300
-                hover:-translate-y-1
-                sm:hover:-translate-y-2
-                hover:border-purple-500
-                hover:shadow-2xl
-                hover:shadow-purple-500/15
-              "
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/15 transition-all duration-500 pointer-events-none" />
-
-              <div className="flex items-center justify-between gap-4">
-
-                <div
-                  className="
-                    p-3
-                    sm:p-4
-                    bg-gradient-to-br
-                    from-purple-500/15
-                    to-pink-500/10
-                    rounded-xl
-                    transition-all
-                    duration-300
-                    group-hover:from-purple-500/25
-                    group-hover:to-pink-500/20
-                    group-hover:scale-105
-                    sm:group-hover:scale-110
-                    border
-                    border-purple-500/20
-                  "
-                >
-
-                  <Users
-                    size={26}
-                    className="text-purple-500 dark:text-purple-400 sm:w-7 sm:h-7"
-                  />
-
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:inline-block">
-                    Join
-                  </span>
-                  <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-all duration-300">
-                    <ArrowRight
-                      size={16}
-                      className="
-                        text-purple-500
-                        group-hover:text-white
-                        transition-transform
-                        duration-300
-                        group-hover:translate-x-0.5
-                      "
-                    />
-                  </div>
-                </div>
-
-              </div>
-
-              <h3 className="text-lg sm:text-xl font-bold mt-5 sm:mt-6 group-hover:text-purple-500 transition-colors">
-                Join Watch Party
-              </h3>
-
-              <p className="theme-text-secondary mt-2 text-sm sm:text-base leading-relaxed">
-                Enter an existing room with a 6-digit party code and immediately enjoy synchronized movies with your crew.
-              </p>
-
-              <div className="flex flex-wrap gap-2 mt-4 sm:mt-5">
-                <span className="text-xs px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium border border-purple-500/20">
-                  Instant Connect
-                </span>
-                <span className="text-xs px-3 py-1 rounded-full bg-pink-500/10 text-pink-600 dark:text-pink-400 font-medium border border-pink-500/20">
-                  Watch Together
-                </span>
-              </div>
-
-            </Link>
-
           </div>
 
         </motion.div>

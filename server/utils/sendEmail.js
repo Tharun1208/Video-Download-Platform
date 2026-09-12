@@ -4,31 +4,44 @@ import nodemailer from "nodemailer";
 // GMAIL TRANSPORTER
 // =========================================================
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
+export const getTransporter = () => {
+  const user = (process.env.EMAIL_USER || "").trim();
+  const pass = (process.env.EMAIL_PASSWORD || "").replace(/\s+/g, "").trim();
 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
+
+const transporter = getTransporter();
 
 // =========================================================
 // VERIFY EMAIL CONFIGURATION
 // =========================================================
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error(
-      "Email transporter error:",
-      error
-    );
-  } else {
-    console.log(
-      "Email server is ready to send messages"
-    );
-  }
-});
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error(
+        "Email transporter verification failed:",
+        error.message
+      );
+    } else {
+      console.log(
+        "✅ Email server is ready to send messages:",
+        process.env.EMAIL_USER
+      );
+    }
+  });
+} else {
+  console.warn(
+    "⚠️ EMAIL_USER or EMAIL_PASSWORD is missing in environment variables. Email sending is disabled."
+  );
+}
 
 // =========================================================
 // SEND SUBSCRIPTION EMAIL

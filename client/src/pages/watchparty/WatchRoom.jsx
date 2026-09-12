@@ -2308,17 +2308,6 @@ function WatchRoom() {
                     </motion.button>
                   ))}
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={copyInviteLink}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition shadow-sm cursor-pointer"
-                  >
-                    <Link2 size={14} />
-                    <span>Invite Link</span>
-                  </button>
-                </div>
               </div>
 
               {/* =================================================

@@ -8,13 +8,20 @@ import nodemailer from "nodemailer";
 // EMAIL TRANSPORTER
 // =========================================================
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const getTransporter = () => {
+  const user = (process.env.EMAIL_USER || "").trim();
+  const pass = (process.env.EMAIL_PASSWORD || "").replace(/\s+/g, "").trim();
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
+
+const transporter = getTransporter();
 
 // =========================================================
 // AUTOMATIC THEME
