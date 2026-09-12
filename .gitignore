@@ -5,8 +5,12 @@ server/node_modules/
 
 # Environment files
 .env
+.env.*
 client/.env
+client/.env.*
+client/.env.production
 server/.env
+server/.env.*
 
 # Build folders
 dist/
