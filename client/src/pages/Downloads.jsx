@@ -5,6 +5,7 @@ import {
   Calendar,
   Clock,
   Video,
+  Crown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -546,8 +547,12 @@ function Downloads() {
                     "General";
 
                 const downloadDate =
+                  item.downloadDate ||
                   item.downloadedAt ||
                   item.createdAt;
+
+                const userPlan = item.userPlan || "Free";
+                const downloadCount = item.downloadCount;
 
                 return (
                   <div
@@ -676,31 +681,14 @@ function Downloads() {
                         </div>
                       )}
 
-                      {/* DOWNLOAD ICON */}
-
-                      <div
-                        className="
-                          absolute
-                          right-4
-                          top-4
-                          flex
-                          h-9
-                          w-9
-                          items-center
-                          justify-center
-                          rounded-xl
-                          bg-black/50
-                          text-white
-                          backdrop-blur-md
-                          opacity-0
-                          transition-all
-                          duration-300
-                          group-hover:opacity-100
-                        "
-                      >
-                        <Download size={17} />
-                      </div>
-
+                      {/* DOWNLOAD COUNT BADGE */}
+                      {downloadCount !== undefined && downloadCount !== null && (
+                        <div className="absolute top-4 right-4 z-10">
+                          <span className="bg-purple-600/90 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg shadow">
+                            #{downloadCount}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* =================================================
@@ -725,10 +713,10 @@ function Downloads() {
                         {title}
                       </h2>
 
-                      {/* CATEGORY */}
+                      {/* CATEGORY & USER PLAN BADGE */}
 
-                      {category && category.toLowerCase() !== "pexels" && (
-                        <div className="mt-3">
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        {category && category.toLowerCase() !== "pexels" ? (
                           <span
                             className="
                               inline-flex
@@ -746,8 +734,15 @@ function Downloads() {
                           >
                             {category}
                           </span>
-                        </div>
-                      )}
+                        ) : <span />}
+
+                        {userPlan && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 text-xs font-semibold text-amber-500">
+                            <Crown size={12} />
+                            {userPlan} Plan
+                          </span>
+                        )}
+                      </div>
 
                       {/* =================================================
                           DATE & TIME
