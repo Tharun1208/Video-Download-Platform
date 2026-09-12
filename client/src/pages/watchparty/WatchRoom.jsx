@@ -143,6 +143,15 @@ function WatchRoom() {
   const userName =
     currentUser?.name || "User";
 
+  const hostId =
+    room?.host?.userId ||
+    room?.host?._id ||
+    room?.host?.id ||
+    room?.hostId ||
+    room?.host;
+
+  const isHost = Boolean(hostId && String(hostId) === String(userId));
+
   // =========================================================
   // THEME SYNC
   // =========================================================
@@ -1697,18 +1706,6 @@ function WatchRoom() {
     );
   }
 
-  // =========================================================
-  // HOST ID
-  // =========================================================
-
-  const hostId =
-    room?.host?.userId ||
-    room?.host?._id ||
-    room?.host?.id ||
-    room?.hostId ||
-    room?.host;
-
-  const isHost = Boolean(hostId && String(hostId) === String(userId));
 
   // =========================================================
   // MAIN UI
