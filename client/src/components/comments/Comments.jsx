@@ -158,9 +158,6 @@ function Comments({ videoId }) {
     useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [shareLocation, setShareLocation] = useState(false);
-  const [commentLanguage, setCommentLanguage] = useState("auto");
-  const [isTranslatingDraft, setIsTranslatingDraft] = useState(false);
-  const [draftTranslatedText, setDraftTranslatedText] = useState("");
 
   useEffect(() => {
     if (!videoId) return;
@@ -215,51 +212,6 @@ function Comments({ videoId }) {
     return { city: "India" };
   };
 
-  const handleTranslateDraft = async () => {
-    const trimmed = text.trim();
-    if (!trimmed) {
-      toast.error("Please type your comment text first.", { id: "draft-empty" });
-      return;
-    }
-    if (commentLanguage === "auto") {
-      toast.error("Please select a target language to translate into.", { id: "draft-lang-auto" });
-      return;
-    }
-
-    try {
-      setIsTranslatingDraft(true);
-      const targetCode = LANGUAGE_CODES[commentLanguage] || commentLanguage;
-      let response;
-      try {
-        response = await axios.post(`${TRANSLATION_API_URL}/translate`, {
-          text: trimmed,
-          target_language: targetCode,
-          target: commentLanguage,
-        }, { timeout: 6000 });
-      } catch {
-        // Fallback to Express backend translation endpoint
-        response = await axios.post(`${API_URL}/api/translate`, {
-          text: trimmed,
-          target_language: commentLanguage,
-          target: commentLanguage,
-        });
-      }
-
-      const resText = response.data?.translation || response.data?.translatedText;
-      if (resText && resText.trim()) {
-        setDraftTranslatedText(resText.trim());
-        toast.success(`Translated to ${LANGUAGE_NAMES[commentLanguage] || commentLanguage}!`, { id: "draft-trans-success" });
-      } else {
-        toast.error("Could not translate text. Please try again.", { id: "draft-trans-err" });
-      }
-    } catch (err) {
-      console.error("Draft translation error:", err);
-      toast.error("Translation service error. Please try again.", { id: "draft-trans-fail" });
-    } finally {
-      setIsTranslatingDraft(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -280,31 +232,11 @@ function Comments({ videoId }) {
         locationData = await getClientLocation();
       }
 
-      // If draft was translated, use it, or auto-translate if a specific target language was picked
-      let textToPost = trimmedText;
-      if (draftTranslatedText) {
-        textToPost = draftTranslatedText;
-      } else if (commentLanguage !== "auto") {
-        try {
-          const targetCode = LANGUAGE_CODES[commentLanguage] || commentLanguage;
-          const transResponse = await axios.post(`${TRANSLATION_API_URL}/translate`, {
-            text: trimmedText,
-            target_language: targetCode,
-          });
-          if (transResponse.data?.success && transResponse.data?.translation) {
-            textToPost = transResponse.data.translation;
-          }
-        } catch (transErr) {
-          console.warn("Auto-translate on post fallback:", transErr);
-        }
-      }
-
       const response = await axios.post(
         `${API_URL}/api/comments`,
         {
           videoId,
-          text: textToPost,
-          language: commentLanguage,
+          text: trimmedText,
           locationEnabled: shareLocation,
           city: locationData?.city || (shareLocation ? "India" : null),
         },
@@ -313,7 +245,6 @@ function Comments({ videoId }) {
 
       if (response?.data?.success) {
         setText("");
-        setDraftTranslatedText("");
         setShareLocation(false);
         toast.success("Comment posted!", { id: "comment-post-success" });
         await fetchComments();
@@ -934,117 +865,35 @@ function Comments({ videoId }) {
           className="w-full resize-none bg-transparent leading-6 outline-none theme-text placeholder:text-gray-400"
         />
 
-        {/* DRAFT TRANSLATION PREVIEW */}
-        {draftTranslatedText && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5"
-          >
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-blue-500 flex items-center gap-1">
-                <Languages size={13} />
-                <span>Translated to {LANGUAGE_NAMES[commentLanguage] || commentLanguage} (will be posted):</span>
-              </p>
-              <p className="text-sm font-medium theme-text mt-1 break-words">
-                {draftTranslatedText}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setText(draftTranslatedText);
-                  setDraftTranslatedText("");
-                }}
-                className="text-xs px-2.5 py-1 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition cursor-pointer"
-              >
-                Use in Box
-              </button>
-              <button
-                type="button"
-                onClick={() => setDraftTranslatedText("")}
-                className="text-xs px-2 py-1 rounded-lg theme-text-secondary hover:theme-text transition cursor-pointer"
-              >
-                Clear
-              </button>
-            </div>
-          </motion.div>
-        )}
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t theme-border pt-4">
+          {/* OPTIONAL LOCATION BADGE */}
+          <label className="flex items-center gap-2 cursor-pointer text-xs theme-text-secondary select-none hover:theme-text transition-colors shrink-0">
+            <input
+              type="checkbox"
+              checked={shareLocation}
+              onChange={(e) => setShareLocation(e.target.checked)}
+              className="rounded accent-blue-600 cursor-pointer w-4 h-4"
+            />
+            <MapPin size={13} className="text-blue-500 shrink-0" />
+            <span>Regional badge (Optional)</span>
+          </label>
 
-        <div className="mt-4 flex flex-col gap-3.5 border-t theme-border pt-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            {/* MULTILINGUAL POSTING LANGUAGE */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
-              <LanguageDropdownTable
-                selected={commentLanguage}
-                onSelect={(newLang) => {
-                  setCommentLanguage(newLang);
-                  setDraftTranslatedText("");
-                }}
-                includeAuto={true}
-                label="Post Language"
-                align="left"
-                size="md"
-              />
-
-              {commentLanguage !== "auto" && text.trim() && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  type="button"
-                  onClick={handleTranslateDraft}
-                  disabled={isTranslatingDraft}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20 active:scale-95 disabled:opacity-50 cursor-pointer w-full sm:w-auto shrink-0"
-                  title="Translate comment before posting"
-                >
-                  {isTranslatingDraft ? (
-                    <Loader2 size={13} className="animate-spin text-white" />
-                  ) : (
-                    <Languages size={13} />
-                  )}
-                  <span>Translate Text</span>
-                </motion.button>
-              )}
-            </div>
-
-            {/* OPTIONAL LOCATION BADGE */}
-            <label className="flex items-center gap-2 cursor-pointer text-xs theme-text-secondary select-none hover:theme-text transition-colors shrink-0">
-              <input
-                type="checkbox"
-                checked={shareLocation}
-                onChange={(e) => setShareLocation(e.target.checked)}
-                className="rounded accent-blue-600 cursor-pointer w-4 h-4"
-              />
-              <MapPin size={13} className="text-blue-500 shrink-0" />
-              <span>Regional badge (Optional)</span>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
             <span className="text-xs theme-text-muted">
               {text.length}/1000
             </span>
 
             <button
               type="submit"
-              disabled={
-                posting || !text.trim()
-              }
+              disabled={posting || !text.trim()}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-blue-700 active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               {posting ? (
-                <Loader2
-                  size={16}
-                  className="animate-spin"
-                />
+                <Loader2 size={16} className="animate-spin" />
               ) : (
                 <Send size={16} />
               )}
-
-              {posting
-                ? "Posting..."
-                : "Post Comment"}
+              {posting ? "Posting..." : "Post Comment"}
             </button>
           </div>
         </div>
