@@ -7,44 +7,59 @@ import nodemailer from "nodemailer";
 // GMAIL TRANSPORTER
 // =========================================================
 
-export const getTransporter = () => {
+export const getTransporter = async () => {
   const user = (process.env.EMAIL_USER || "").trim();
   const pass = (process.env.EMAIL_PASSWORD || "").replace(/\s+/g, "").trim();
 
+  let host = "smtp.gmail.com";
+  try {
+    const { address } = await dns.promises.lookup("smtp.gmail.com", { family: 4 });
+    if (address) {
+      host = address;
+    }
+  } catch (dnsErr) {
+    console.warn("DNS IPv4 lookup fallback to smtp.gmail.com:", dnsErr.message);
+  }
+
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host,
     port: 465,
     secure: true,
+    servername: "smtp.gmail.com",
+    tls: {
+      servername: "smtp.gmail.com",
+    },
     auth: {
       user,
       pass,
     },
-    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
   });
 };
 
-const transporter = getTransporter();
-
 // =========================================================
 // VERIFY EMAIL CONFIGURATION
 // =========================================================
 
 if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error(
-        "Email transporter verification failed:",
-        error.message
-      );
-    } else {
-      console.log(
-        "✅ Email server is ready to send messages:",
-        process.env.EMAIL_USER
-      );
-    }
+  getTransporter().then((transporter) => {
+    transporter.verify((error, success) => {
+      if (error) {
+        console.error(
+          "Email transporter verification failed:",
+          error.message
+        );
+      } else {
+        console.log(
+          "✅ Email server is ready to send messages:",
+          process.env.EMAIL_USER
+        );
+      }
+    });
+  }).catch((err) => {
+    console.error("Email transporter init failed:", err.message);
   });
 } else {
   console.warn(
@@ -66,7 +81,7 @@ export const sendSubscriptionEmail = async ({
   date,
 }) => {
   try {
-    const transporter = getTransporter();
+    const transporter = await getTransporter();
     // =====================================================
     // VALIDATE EMAIL
     // =====================================================

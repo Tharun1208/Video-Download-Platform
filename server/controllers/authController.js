@@ -11,26 +11,37 @@ import nodemailer from "nodemailer";
 // EMAIL TRANSPORTER
 // =========================================================
 
-const getTransporter = () => {
+const getTransporter = async () => {
   const user = (process.env.EMAIL_USER || "").trim();
   const pass = (process.env.EMAIL_PASSWORD || "").replace(/\s+/g, "").trim();
 
+  let host = "smtp.gmail.com";
+  try {
+    const { address } = await dns.promises.lookup("smtp.gmail.com", { family: 4 });
+    if (address) {
+      host = address;
+    }
+  } catch (dnsErr) {
+    console.warn("DNS IPv4 lookup fallback to smtp.gmail.com:", dnsErr.message);
+  }
+
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host,
     port: 465,
     secure: true,
+    servername: "smtp.gmail.com",
+    tls: {
+      servername: "smtp.gmail.com",
+    },
     auth: {
       user,
       pass,
     },
-    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
   });
 };
-
-const transporter = getTransporter();
 
 // =========================================================
 // AUTOMATIC THEME
@@ -95,7 +106,7 @@ const sendLoginOtpEmail = async (
     );
   }
 
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
 
   await transporter.sendMail({
     from: `"StreamVault" <${process.env.EMAIL_USER}>`,
@@ -1098,7 +1109,7 @@ export const forgotPassword = async (
     const resetURL =
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    const transporter = getTransporter();
+    const transporter = await getTransporter();
 
     await transporter.sendMail({
       from:
