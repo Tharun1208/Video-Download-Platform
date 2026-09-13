@@ -45,24 +45,19 @@ function Login() {
     let state = "";
 
     try {
-      const res = await fetch("https://ipapi.co/json/");
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2500);
+
+      const res = await fetch("https://ipwho.is/", { signal: controller.signal });
+      clearTimeout(timer);
+
       if (res.ok) {
         const data = await res.json();
         city = data.city || data.region || "";
         state = data.region || "";
       }
     } catch {
-      // Fallback: try alternative geo IP
-      try {
-        const res2 = await fetch("https://ipwho.is/");
-        if (res2.ok) {
-          const data2 = await res2.json();
-          city = data2.city || data2.region || "";
-          state = data2.region || "";
-        }
-      } catch {
-        // Silent fallback
-      }
+      // Geo-IP failed or timed out; continue without blocking login
     }
 
     const device =
