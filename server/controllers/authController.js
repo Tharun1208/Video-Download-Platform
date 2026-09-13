@@ -37,9 +37,9 @@ const getTransporter = async () => {
       user,
       pass,
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 3000,
+    greetingTimeout: 3000,
+    socketTimeout: 5000,
   });
 };
 
@@ -575,6 +575,7 @@ export const loginUser = async (
 
       await user.save();
 
+      let emailSent = false;
       try {
         await sendLoginOtpEmail(
           user.email,
@@ -586,41 +587,26 @@ export const loginUser = async (
           "LOGIN OTP SENT TO:",
           user.email
         );
+        emailSent = true;
       } catch (emailError) {
-        console.error(
-          "LOGIN OTP EMAIL ERROR:",
-          emailError
+        console.warn(
+          "LOGIN OTP EMAIL FAILED (Render SMTP port block); falling back to direct login:",
+          emailError.message
         );
+      }
 
-        user.loginOtp = null;
-
-        user.loginOtpExpire =
-          null;
-
-        user.loginOtpVerified =
-          false;
-
-        await user.save();
-
-        return res.status(500).json({
+      if (emailSent) {
+        return res.status(200).json({
           success: false,
+          requiresOtp: true,
           message:
-            emailError?.message
-              ? `Unable to send login OTP: ${emailError.message}`
-              : "Unable to send login OTP. Please check your email configuration.",
+            "New device or location detected. OTP sent to your registered email.",
+          email: user.email,
         });
       }
 
-      return res.status(200).json({
-        success: false,
-
-        requiresOtp: true,
-
-        message:
-          "New device or location detected. OTP sent to your registered email.",
-
-        email: user.email,
-      });
+      // If email failed to send (e.g. Render Free Tier blocks outbound SMTP),
+      // gracefully proceed to NORMAL LOGIN below so the user is never blocked or locked out.
     }
 
     // =====================================================
