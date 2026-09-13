@@ -63,6 +63,7 @@ export const sendSubscriptionEmail = async ({
   date,
 }) => {
   try {
+    const transporter = getTransporter();
     // =====================================================
     // VALIDATE EMAIL
     // =====================================================

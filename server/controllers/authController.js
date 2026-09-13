@@ -92,6 +92,8 @@ const sendLoginOtpEmail = async (
     );
   }
 
+  const transporter = getTransporter();
+
   await transporter.sendMail({
     from: `"StreamVault" <${process.env.EMAIL_USER}>`,
     to: email,
@@ -1091,6 +1093,8 @@ export const forgotPassword = async (
 
     const resetURL =
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    const transporter = getTransporter();
 
     await transporter.sendMail({
       from:
