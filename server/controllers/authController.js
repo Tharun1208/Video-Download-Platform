@@ -1,3 +1,6 @@
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../models/User.js";
@@ -590,9 +593,10 @@ export const loginUser = async (
 
         return res.status(500).json({
           success: false,
-
           message:
-            "Unable to send login OTP. Please check your email configuration.",
+            emailError?.message
+              ? `Unable to send login OTP: ${emailError.message}`
+              : "Unable to send login OTP. Please check your email configuration.",
         });
       }
 
